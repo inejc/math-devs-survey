@@ -1,0 +1,30 @@
+---
+title: "Data Cleaning"
+output: github_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+na.strings = c('N/A', 'Prefer not to disclose', 'Other', 'Rather not say', 'Other (please specify)')
+survey.raw = read.csv('data/stack_overflow_survey_2016.csv', na.strings = na.strings)
+```
+
+Let's take a look at all the available columns and occupations
+```{r}
+colnames(survey.raw)
+levels(survey.raw$occupation)
+```
+
+Filter data scientists
+```{r}
+survey.ds = survey.raw[survey.raw$occupation == 'Data scientist', 2:ncol(survey.raw)]
+survey.ds[survey.ds == ''] = NA
+
+nrow(survey.ds)
+survey.ds = survey.ds[complete.cases(survey.ds[, 'country']),]
+nrow(survey.ds)
+
+write.csv(survey.ds, 'data/stack_overflow_survey_2016_ds.csv', na = 'NA', row.names = F)
+```
