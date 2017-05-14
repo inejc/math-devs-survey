@@ -8,7 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 na.strings = c('N/A', 'Prefer not to disclose', 'Other', 'Rather not say', 'Other (please specify)')
-survey.raw = read.csv('data/stack_overflow_survey_2016.csv', na.strings = na.strings)
+survey.raw = read.csv('../data/stack_overflow_survey_2016.csv', na.strings = na.strings)
 ```
 
 Let's take a look at all the available columns and occupations
@@ -26,5 +26,5 @@ nrow(survey.ds)
 survey.ds = survey.ds[complete.cases(survey.ds[, 'country']),]
 nrow(survey.ds)
 
-write.csv(survey.ds, 'data/stack_overflow_survey_2016_ds.csv', na = 'NA', row.names = F)
+write.csv(survey.ds, '../data/stack_overflow_survey_2016_ds.csv', na = 'NA', row.names = F)
 ```

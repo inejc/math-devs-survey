@@ -3,7 +3,7 @@ Data Cleaning
 
 ``` r
 na.strings = c('N/A', 'Prefer not to disclose', 'Other', 'Rather not say', 'Other (please specify)')
-survey.raw = read.csv('data/stack_overflow_survey_2016.csv', na.strings = na.strings)
+survey.raw = read.csv('../data/stack_overflow_survey_2016.csv', na.strings = na.strings)
 ```
 
 Let's take a look at all the available columns and occupations
@@ -98,5 +98,5 @@ nrow(survey.ds)
     ## [1] 796
 
 ``` r
-write.csv(survey.ds, 'data/stack_overflow_survey_2016_ds.csv', na = 'NA', row.names = F)
+write.csv(survey.ds, '../data/stack_overflow_survey_2016_ds.csv', na = 'NA', row.names = F)
 ```

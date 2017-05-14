@@ -1,0 +1,26 @@
+\documentclass[9pt]{article}
+
+\setlength{\topmargin}{-.5in}
+\setlength{\oddsidemargin}{.125in}
+\setlength{\textwidth}{6.25in}
+\usepackage{float}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE, echo=TRUE}
+
+<<echo=FALSE>>=
+library(ggplot2)
+library(rstan)
+rstan_options(auto_write = TRUE)
+set.seed(0)
+@
+
+\title{Data Scientists Survey \\ Bayesian statistics}
+\author{Nejc Ileni\v{c}}
+\date{}
+\maketitle
+
+\section{Introduction}
+todo
+
+\end{document}
