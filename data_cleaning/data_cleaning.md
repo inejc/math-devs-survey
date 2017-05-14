@@ -6,7 +6,7 @@ na.strings = c('N/A', 'Prefer not to disclose', 'Other', 'Rather not say', 'Othe
 survey.raw = read.csv('../data/stack_overflow_survey_2016.csv', na.strings = na.strings)
 ```
 
-Let's take a look at all the available columns and occupations
+Let's take a look at all the available columns, occupations and occupation groups
 
 ``` r
 colnames(survey.raw)
@@ -79,24 +79,52 @@ levels(survey.raw$occupation)
     ## [27] "Student"                                              
     ## [28] "System administrator"
 
-Filter data scientists
-
 ``` r
-survey.ds = survey.raw[survey.raw$occupation == 'Data scientist', 2:ncol(survey.raw)]
-survey.ds[survey.ds == ''] = NA
-
-nrow(survey.ds)
+levels(survey.raw$occupation_group)
 ```
 
-    ## [1] 800
+    ##  [1] ""                                                                                                    
+    ##  [2] "Analyst"                                                                                             
+    ##  [3] "Back-end web developer"                                                                              
+    ##  [4] "Business intelligence or data warehousing expert"                                                    
+    ##  [5] "Database administrator"                                                                              
+    ##  [6] "Designer"                                                                                            
+    ##  [7] "Desktop developer"                                                                                   
+    ##  [8] "DevOps"                                                                                              
+    ##  [9] "Embedded application developer"                                                                      
+    ## [10] "Engineering manager"                                                                                 
+    ## [11] "Enterprise level services developer"                                                                 
+    ## [12] "Executive (VP of Eng., CTO, CIO, etc.)"                                                              
+    ## [13] "Front-end web developer"                                                                             
+    ## [14] "Full-stack web developer"                                                                            
+    ## [15] "Graphics programmer"                                                                                 
+    ## [16] "Growth hacker"                                                                                       
+    ## [17] "Mathematics Developers (Data Scientists, Machine Learning Devs & Devs with Stats & Math Backgrounds)"
+    ## [18] "Mobile Dev (Android, iOS, WP & Multi-Platform)"                                                      
+    ## [19] "Product manager"                                                                                     
+    ## [20] "Quality Assurance"                                                                                   
+    ## [21] "Student"                                                                                             
+    ## [22] "System administrator"
+
+Filter data scientists, machine learners, statistics and math developers
 
 ``` r
-survey.ds = survey.ds[complete.cases(survey.ds[, 'country']),]
-nrow(survey.ds)
+filter.str = 'Mathematics Developers (Data Scientists, Machine Learning Devs & Devs with Stats & Math Backgrounds)'
+survey.cleaned = survey.raw[survey.raw$occupation_group == filter.str, 2:ncol(survey.raw)]
+survey.cleaned[survey.cleaned == ''] = NA
+
+nrow(survey.cleaned)
 ```
 
-    ## [1] 796
+    ## [1] 2145
 
 ``` r
-write.csv(survey.ds, '../data/stack_overflow_survey_2016_ds.csv', na = 'NA', row.names = F)
+survey.cleaned = survey.cleaned[complete.cases(survey.cleaned[, 'country']),]
+nrow(survey.cleaned)
+```
+
+    ## [1] 2132
+
+``` r
+write.csv(survey.cleaned, '../data/stack_overflow_survey_2016_cleaned.csv', na = 'NA', row.names = F)
 ```

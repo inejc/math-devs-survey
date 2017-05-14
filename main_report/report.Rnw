@@ -15,6 +15,11 @@ rstan_options(auto_write = TRUE)
 set.seed(0)
 @
 
+<<echo=FALSE>>=
+survey.ds = read.csv('../data/stack_overflow_survey_2016_ds.csv')
+@
+
+
 \title{Data Scientists Survey \\ Bayesian statistics}
 \author{Nejc Ileni\v{c}}
 \date{}
@@ -22,5 +27,12 @@ set.seed(0)
 
 \section{Introduction}
 todo
+
+\section{Exploratory Analysis}
+todo
+<<>>=
+tapply(survey.ds$country, survey.ds$country, length)
+@
+
 
 \end{document}

@@ -11,20 +11,22 @@ na.strings = c('N/A', 'Prefer not to disclose', 'Other', 'Rather not say', 'Othe
 survey.raw = read.csv('../data/stack_overflow_survey_2016.csv', na.strings = na.strings)
 ```
 
-Let's take a look at all the available columns and occupations
+Let's take a look at all the available columns, occupations and occupation groups
 ```{r}
 colnames(survey.raw)
 levels(survey.raw$occupation)
+levels(survey.raw$occupation_group)
 ```
 
-Filter data scientists
+Filter data scientists, machine learners, statistics and math developers
 ```{r}
-survey.ds = survey.raw[survey.raw$occupation == 'Data scientist', 2:ncol(survey.raw)]
-survey.ds[survey.ds == ''] = NA
+filter.str = 'Mathematics Developers (Data Scientists, Machine Learning Devs & Devs with Stats & Math Backgrounds)'
+survey.cleaned = survey.raw[survey.raw$occupation_group == filter.str, 2:ncol(survey.raw)]
+survey.cleaned[survey.cleaned == ''] = NA
 
-nrow(survey.ds)
-survey.ds = survey.ds[complete.cases(survey.ds[, 'country']),]
-nrow(survey.ds)
+nrow(survey.cleaned)
+survey.cleaned = survey.cleaned[complete.cases(survey.cleaned[, 'country']),]
+nrow(survey.cleaned)
 
-write.csv(survey.ds, '../data/stack_overflow_survey_2016_ds.csv', na = 'NA', row.names = F)
+write.csv(survey.cleaned, '../data/stack_overflow_survey_2016_cleaned.csv', na = 'NA', row.names = F)
 ```

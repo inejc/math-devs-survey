@@ -10,6 +10,8 @@
 \input{report-concordance}
 
 
+
+
 \title{Data Scientists Survey \\ Bayesian statistics}
 \author{Nejc Ileni\v{c}}
 \date{}
@@ -17,5 +19,52 @@
 
 \section{Introduction}
 todo
+
+\section{Exploratory Analysis}
+todo
+\begin{Schunk}
+\begin{Sinput}
+> tapply(survey.ds$country, survey.ds$country, length)
+\end{Sinput}
+\begin{Soutput}
+           Andorra          Argentina          Australia            Austria 
+                 1                  4                 13                  5 
+        Azerbaijan            Belarus            Belgium             Brazil 
+                 1                  1                 12                 12 
+          Bulgaria             Canada              Chile              China 
+                 1                 28                  3                  3 
+          Colombia            Croatia             Cyprus     Czech Republic 
+                 3                  1                  2                  4 
+           Denmark              Egypt            Finland             France 
+                10                  1                  5                 37 
+           Germany              Ghana             Greece          Hong Kong 
+                66                  1                  8                  1 
+           Hungary              India          Indonesia               Iran 
+                 4                 47                  1                  3 
+Ireland {Republic}             Israel              Italy              Japan 
+                 5                  5                 18                  3 
+            Jordan        Korea South             Kosovo            Lebanon 
+                 1                  2                  1                  1 
+         Lithuania              Malta             Mexico           Mongolia 
+                 2                  1                  6                  1 
+       Netherlands        New Zealand          Nicaragua            Nigeria 
+                16                  6                  1                  1 
+            Norway               Oman           Pakistan           Paraguay 
+                 2                  1                  3                  1 
+              Peru        Philippines             Poland           Portugal 
+                 1                  3                  6                  5 
+           Romania Russian Federation          Singapore           Slovakia 
+                 3                 11                 10                  1 
+          Slovenia       South Africa              Spain          Sri Lanka 
+                 4                  4                 20                  1 
+            Sweden        Switzerland              Syria  Trinidad & Tobago 
+                 8                 20                  1                  1 
+           Tunisia             Turkey            Ukraine     United Kingdom 
+                 1                  1                  8                 80 
+     United States            Vietnam 
+               250                  2 
+\end{Soutput}
+\end{Schunk}
+
 
 \end{document}

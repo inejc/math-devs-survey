@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.3.3)  14 MAY 2017 22:06
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.3.3)  14 MAY 2017 22:27
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -274,32 +274,38 @@ e
 ))
 (./report-concordance.tex)
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 16.
+(Font)              <12> on input line 18.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 16.
+(Font)              <8> on input line 18.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 16.
- [1
+(Font)              <6> on input line 18.
+LaTeX Font Info:    Try loading font information for T1+aett on input line 26.
 
-{/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (./repo
-rt.aux) ) 
+(/usr/local/texlive/2015/texmf-dist/tex/latex/ae/t1aett.fd
+File: t1aett.fd 1997/11/16 Font definitions for T1/aett.
+) [1
+
+{/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] (./
+report.aux) ) 
 Here is how much of TeX's memory you used:
- 2729 strings out of 493033
- 39043 string characters out of 6134140
- 90030 words of memory out of 5000000
- 6216 multiletter control sequences out of 15000+600000
- 19449 words of font info for 44 fonts, out of 8000000 for 9000
+ 2757 strings out of 493033
+ 39506 string characters out of 6134140
+ 98030 words of memory out of 5000000
+ 6236 multiletter control sequences out of 15000+600000
+ 20787 words of font info for 49 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 37i,6n,23p,246b,189s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmb
-x12.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr1
-0.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.
-pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pf
-b>
-Output written on report.pdf (1 page, 37286 bytes).
+ 37i,6n,23p,246b,280s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmbx12.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmr10.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+r12.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr1
+7.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmsltt
+10.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt1
+0.pfb>
+Output written on report.pdf (2 pages, 69428 bytes).
 PDF statistics:
- 25 PDF objects out of 1000 (max. 8388607)
- 16 compressed objects within 1 object stream
+ 36 PDF objects out of 1000 (max. 8388607)
+ 24 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  5 words of extra memory for PDF output out of 10000 (max. 10000000)
 
