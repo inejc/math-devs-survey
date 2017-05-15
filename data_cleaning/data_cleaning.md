@@ -9,6 +9,12 @@ survey.raw = read.csv('../data/stack_overflow_survey_2016.csv', na.strings = na.
 Let's take a look at all the available columns, occupations and occupation groups
 
 ``` r
+ncol(survey.raw)
+```
+
+    ## [1] 66
+
+``` r
 colnames(survey.raw)
 ```
 
@@ -107,6 +113,12 @@ levels(survey.raw$occupation_group)
     ## [22] "System administrator"
 
 Filter data scientists, machine learners, statistics and math developers
+
+``` r
+nrow(survey.raw)
+```
+
+    ## [1] 56030
 
 ``` r
 filter.str = 'Mathematics Developers (Data Scientists, Machine Learning Devs & Devs with Stats & Math Backgrounds)'

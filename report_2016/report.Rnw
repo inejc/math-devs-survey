@@ -1,0 +1,86 @@
+\documentclass[9pt]{article}
+
+\setlength{\topmargin}{-.5in}
+\setlength{\oddsidemargin}{.125in}
+\setlength{\textwidth}{6.25in}
+\usepackage{float}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE, echo=TRUE}
+
+<<echo=FALSE>>=
+library(ggplot2)
+library(rstan)
+rstan_options(auto_write = TRUE)
+set.seed(0)
+@
+
+<<echo=FALSE>>=
+data.cleaned = read.csv('../data/stack_overflow_survey_2016_cleaned.csv')
+@
+
+
+\title{Mathematics Developers Survey 2016}
+\author{Nejc Ileni\v{c}}
+\date{}
+\maketitle
+
+\section{Introduction}
+Anonymised responses from Stack Overflow Annual Developer Survey are published each year along the results to encourage their further analysis. Being curious about where in the world an aspiring data scientist should start his/her career, I have decided to use the shared data in an attempt to answer this question and to learn more about people identifying themselves as mathematics developers.
+
+\vspace{3mm}
+
+An important thing to note when interpreting the results is that this data may not be a represantative sample from the population of mathematics developers. One should keep in mind that these are developers who were aware of the survey and were willing to answer the questions.
+
+\section{Data Preparation}
+The dataset was constructed from survey that took place from January 7 to January 25, 2016, with responses originating from Stack Overflow, Stack Exchange technical sites, Facebook and Twitter. Raw data consists of 56030 samples and 66 features, all of which are optional.
+
+\vspace{3mm}
+
+In order to obtain an adequately sizable sample, I have decided to include all respondents that belong to the occupation group of mathematics developers, which includes data scientists, machine learning developers and developers with statistics and mathematics backgrounds. After filtering out other occupations and responses with unknown countries we are left with 2132 samples. In the next section a basic exploratory analysis is carried out.
+
+\section{Exploratory Data Analysis}
+Number of mathematics developers per country can be seen in Figure \ref{fig_0}. Minimum number of 40 respondents is required to take the country into account and all others are placed into a single group called \textit{Other}. Note that selected countries and number of people may be different when doing inference of specific features due to missing values.
+
+<<echo=FALSE>>=
+# helper functions
+GetNonNaData = function(summary.col, additional.cols = NULL) {
+  min.occurences = 40
+  CountNonNa = function(x) {length(x[!is.na(x)])}
+
+  counts = tapply(data.cleaned[, summary.col], data.cleaned$country, CountNonNa)
+  countries = names(counts[counts >= min.occurences])
+
+  result.cols = c('country', summary.col, additional.cols)
+  df.selected = na.omit(data.cleaned[data.cleaned$country %in% countries, result.cols])
+  df.other = na.omit(data.cleaned[!data.cleaned$country %in% countries, result.cols])
+  df.other$country = 'Other'
+
+  return(rbind(df.selected, df.other))
+}
+@
+
+<<echo=FALSE>>=
+data.countries = GetNonNaData('country')
+@
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE, fig=True, width=5, height=4>>=
+ggplot(data.countries) +
+  geom_bar(aes(x = reorder(country, country, function(x) - length(x))), fill = 'dodgerblue') +
+  geom_text(stat = 'count', aes(x = country, label = ..count..), vjust = -.05) +
+  labs(x = 'Country', y = 'Number of respondents') +
+  theme(axis.text.x = element_text(
+    size  = 10,
+    angle = 45,
+    hjust = 1,
+    vjust = 1)
+  )
+@
+\caption{Number of mathematics developers per country.}\label{fig_0}
+\end{figure}
+
+todo
+
+\end{document}
