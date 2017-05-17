@@ -1,0 +1,196 @@
+\documentclass[9pt]{article}
+
+\setlength{\topmargin}{-.5in}
+\setlength{\oddsidemargin}{.125in}
+\setlength{\textwidth}{6.25in}
+\usepackage{float}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE, echo=TRUE}
+
+<<echo=FALSE>>=
+library(ggplot2)
+library(rstan)
+
+rstan_options(auto_write = TRUE)
+rstan_ggtheme_options(legend.position = 'none')
+
+set.seed(0)
+@
+
+<<echo=FALSE>>=
+data.cleaned = read.csv('../data/stack_overflow_survey_2016_cleaned.csv')
+@
+
+<<echo=FALSE>>=
+# helper functions
+GetNonNaData = function(summary.col, additional.cols = NULL) {
+  min.occurences = 40
+  CountNonNa = function(x) {length(x[!is.na(x)])}
+
+  counts = tapply(data.cleaned[, summary.col], data.cleaned$country, CountNonNa)
+  countries = names(counts[counts >= min.occurences])
+
+  result.cols = c('country', summary.col, additional.cols)
+  df.selected = na.omit(data.cleaned[data.cleaned$country %in% countries, result.cols])
+  df.other = na.omit(data.cleaned[!data.cleaned$country %in% countries, result.cols])
+  df.other$country = 'Other'
+
+  return(rbind(df.selected, df.other))
+}
+@
+
+\title{Mathematics Developers Survey 2016}
+\author{Nejc Ileni\v{c}}
+\date{}
+\maketitle
+
+\section{Introduction}
+Anonymised responses from Stack Overflow Annual Developer Survey are published each year along the results to encourage their further analysis. Being curious about where in the world an aspiring data scientist should start his/her career, I have decided to use the available data in an attempt to answer this question and to learn more about people identifying themselves as mathematics developers.
+
+The survey consisted mostly of demographic questions and questions regarding professional work and technology. Some specific questions that we will seek answers to are \textit{In which countries are mathematics developers most satisfied with their jobs?}, \textit{In which countries do mathematics developers make the most money?}, \textit{How is compensation related to the level of satisfaction}? and alike.
+
+\vspace{2mm}
+
+An important thing to note when interpreting the results however is that this data may not be a represantative sample from the population of mathematics developers. One should keep in mind that these are developers who were aware of the survey and were willing to answer the questions.
+
+\section{Data Preparation}
+The dataset was constructed from survey that took place from January 7 to January 25, 2016, with responses originating from Stack Overflow, Stack Exchange technical sites, Facebook and Twitter. Raw data consists of 56030 samples and 66 features, all of which are optional.
+
+In order to obtain an adequately sizable sample, I have decided to include all respondents that belong to the occupation group of mathematics developers, which includes data scientists, machine learning developers and developers with statistics and mathematics backgrounds. After filtering out other occupations and responses with unknown countries we are left with 2132 samples.
+
+\vspace{2mm}
+
+Number of mathematics developers per country can be seen in Figure \ref{fig_0}. Minimum number of 40 respondents is required to take the country into account and all others are placed into a single group called \textit{Other}. Note that selected countries and number of people may be different when doing inference of specific features due to missing values (i.e. optional answers in the survey). Majority of respondents are from United States, followed by a combination of countries with less than 40 developers, United Kingdom, Germany and India.
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE, fig=True, width=5, height=4>>=
+ggplot(GetNonNaData('country')) +
+  geom_bar(aes(x = reorder(country, country, function(x) - length(x))), fill = 'dodgerblue') +
+  geom_text(stat = 'count', aes(x = country, label = ..count..), vjust = -.05) +
+  labs(x = 'Country', y = 'Number of respondents') +
+  theme(axis.text.x = element_text(
+    size  = 10,
+    angle = 45,
+    hjust = 1,
+    vjust = 1)
+  )
+@
+\caption{Number of mathematics developers per country.}\label{fig_0}
+\end{figure}
+
+\section{Job Satisfaction}
+todo
+
+<<echo=FALSE>>=
+# data preparation
+params = c('theta[1]', 'theta[2]', 'theta[3]', 'theta[4]', 'theta[5]', 'theta[6]')
+params.labels = c(
+  'I don\'t have a job',
+  'I hate my job',
+  'I\'m somewhat dissatisfied with my job',
+  'I\'m neither satisfied nor dissatisfied',
+  'I\'m somewhat satisfied with my job',
+  'I love my job'
+)
+
+data.satisfaction = GetNonNaData('job_satisfaction')
+
+# reorder factor levels i.e.
+reordered.levels = levels(data.satisfaction$job_satisfaction)[c(1, 2, 5, 4, 6, 3)]
+data.satisfaction$job_satisfaction = factor(data.satisfaction$job_satisfaction, reordered.levels)
+@
+
+<<echo=FALSE>>=
+# stan data preparation
+countries = unique(data.satisfaction$country)
+
+k = 6
+prior.params = c(1, 1, 1, 1, 1, 1)
+
+stan.data = list()
+
+for (country in countries) {
+  y = as.numeric(data.satisfaction[data.satisfaction$country == country, 'job_satisfaction'])
+  stan.data[[country]] = list(
+    n = length(y),
+    k = k,
+    y = y,
+    a = prior.params
+  )
+}
+@
+
+<<computation,results=hide,echo=FALSE>>=
+stan.fits = list()
+
+for (country in countries) {
+  # fit a model
+  stan.fits[[country]] = stan(
+    file = '../models/multinomial_dirichlet.stan',
+    data = stan.data[[country]],
+    iter = 1000,
+    warmup = 100,
+    chains = 1
+  )
+
+  # save a traceplot
+  trace.plot = traceplot(
+    stan.fits[[country]],
+    pars = params,
+    nrow = 3,
+    ncol = 2
+  )
+
+  summ = summary(
+    stan.fits[[country]],
+    pars = params
+  )
+  se = summ$summary[, c('se_mean')]
+  n_eff = as.integer(summ$summary[, c('n_eff')])
+  sampling.info = paste('se: ', se, ', n_eff', n_eff)
+
+  trace.plot = trace.plot + annotate(
+    'text',
+    label = sampling.info,
+    x = 0,
+    y = 0,
+    hjust = 0,
+    vjust = 0,
+    size = 3,
+    fontface = 2,
+  )
+  ggsave(paste('../plots/traceplot_job_satisfaction_', country, '.png'), trace.plot)
+}
+@
+
+<<echo=FALSE>>=
+# todo: se_mean
+s = summary(stan.fits$Germany, pars = params)$summary
+s.df = data.frame(
+  mean = s[, c('mean')],
+  ci.low = s[, c('2.5%')],
+  ci.up = s[, c('97.5%')]
+)
+s.df$label = factor(params.labels, params.labels)
+@
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=4,echo=FALSE>>=
+ggplot(s.df) + 
+  geom_errorbar(aes(x = label, ymin = ci.low, ymax = ci.up), color = 'dodgerblue', size = 1.5, width = 0.7) + 
+  geom_point(aes(x = label, y = mean), colour = 'coral', size = 2) +
+  labs(x = 'Answer', y = 'Probability') +
+  theme(axis.text.x = element_text(
+    size  = 10,
+    angle = 25,
+    hjust = 1,
+    vjust = 1)
+  )
+@
+\caption{todo.}\label{fig_2}
+\end{figure}
+
+\end{document}
