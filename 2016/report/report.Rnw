@@ -77,6 +77,7 @@ In order to obtain an adequately sizable sample, I have decided to include all r
 Number of mathematics developers per country can be seen in Figure \ref{fig_0}. Minimum number of 40 respondents is required to take the country into account and all others are placed into a single group called \textit{Other}. Note that selected countries and number of people may be different when doing inference of specific features due to missing values (i.e. optional answers in the survey). Majority of respondents are from United States, followed by a combination of countries with less than 40 developers, United Kingdom, Germany and India.
 
 <<echo=FALSE>>=
+# NUMBER OF RESPONDENTS
 num.respondents.plot = ggplot(GetNonNaData('country')) +
   geom_bar(aes(x = reorder(country, country, function(x) - length(x))), fill = 'dodgerblue') +
   geom_text(stat = 'count', aes(x = country, label = ..count..), vjust = -.05) +
@@ -93,7 +94,7 @@ ggsave(paste('../plots/num_respondents_per_country.png'), num.respondents.plot)
 
 \begin{figure}[H]
 \centering
-<<echo=FALSE, fig=True, width=5, height=4>>=
+<<fig=True,width=5,height=4,echo=FALSE>>=
 num.respondents.plot
 @
 \caption{Number of mathematics developers per country.}\label{fig_0}
@@ -103,7 +104,7 @@ num.respondents.plot
 todo
 
 <<echo=FALSE>>=
-# data preparation
+# JOB SATISFACTION: data preparation
 params = c('theta[1]', 'theta[2]', 'theta[3]', 'theta[4]', 'theta[5]')
 params.labels = c(
   'I hate my job',
@@ -112,8 +113,8 @@ params.labels = c(
   'I\'m somewhat satisfied with my job',
   'I love my job'
 )
-params.unsatisfied = c(1, 2, 3)
-params.satisfied = c(4, 5)
+params.satisfied = 5
+params.unsatisfied = c(1, 2, 3, 4)
 
 data.satisfaction = GetNonNaData('job_satisfaction')
 data.satisfaction = data.satisfaction[data.satisfaction$job_satisfaction != 'I don\'t have a job',]
@@ -125,7 +126,7 @@ data.satisfaction$job_satisfaction = factor(data.satisfaction$job_satisfaction, 
 @
 
 <<echo=FALSE>>=
-# stan data preparation
+# JOB SATISFACTION: stan data preparation
 countries = unique(data.satisfaction$country)
 stan.data = list()
 
@@ -141,7 +142,7 @@ for (country in countries) {
 @
 
 <<computation,results=hide,echo=FALSE>>=
-# model fitting and diagnostic plots saving
+# JOB SATISFACTION: model fitting and diagnostic plots saving
 stan.fits = list()
 
 for (country in countries) {
@@ -186,7 +187,7 @@ for (country in countries) {
 @
 
 <<echo=FALSE>>=
-# posterior predictive check (satisfied - not satisfied log odds ratio)
+# JOB SATISFACTION: posterior predictive check (satisfied - not satisfied log odds ratio)
 empirical.logodds = data.frame()
 posterior.logodds = data.frame()
 
@@ -196,20 +197,21 @@ for (country in countries) {
   pred.datasets = extract(stan.fits[[country]], pars = 'y_datasets')$y_datasets
 
   # empirical log odds
-  num.satisfied = length(Filter(function(x) x %in% params.satisfied, observed.dataset))
+  num.satisfied = length(Filter(function(x) x == params.satisfied, observed.dataset))
   num.unsatisfied = length(Filter(function(x) x %in% params.unsatisfied, observed.dataset))
   df = data.frame(lo = log(num.satisfied / num.unsatisfied), n = n, country = country)
   empirical.logodds = rbind(empirical.logodds, df)
 
   # replicated log odds
-  num.satisfied = rowSums(pred.datasets[, params.satisfied])
+  # num.satisfied = rowSums(pred.datasets[, params.satisfied])
+  num.satisfied = pred.datasets[, params.satisfied]
   num.unsatisfied = rowSums(pred.datasets[, params.unsatisfied])
   df = data.frame(lo = log(num.satisfied / num.unsatisfied), country = country)
   posterior.logodds = rbind(posterior.logodds, df)
 }
 
 posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
-  geom_histogram(binwidth = .3, fill = 'dodgerblue') +
+  geom_histogram(binwidth = .2, fill = 'dodgerblue') +
   geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
   facet_wrap(~country, nrow = 5, ncol = 2) +
   labs(x = 'Posterior predictive log odds', y = 'Count')
@@ -231,7 +233,7 @@ posterior.check.plot
 \end{figure}
 
 <<echo=FALSE>>=
-# posterior parameters error bars data preparation
+# JOB SATISFACTION: posterior parameters error bars data preparation
 errorbars = data.frame()
 
 for (country in countries) {
@@ -279,5 +281,55 @@ errorbars.plot
 @
 \caption{todo.}\label{fig_2}
 \end{figure}
+
+<<echo=FALSE>>=
+# JOB SATISFACTION: posterior predictive probabilities
+posterior.satisfied = data.frame()
+
+for (country in countries) {
+  posterior.pred = extract(stan.fits[[country]], pars = 'y_pred')$y_pred
+  num.satisfied = length(Filter(function(x) x == params.satisfied, posterior.pred))
+  df = data.frame(satisfaction = num.satisfied / length(posterior.pred), country = country)
+  posterior.satisfied  = rbind(posterior.satisfied, df)
+}
+
+posterior.prob.plot = ggplot(posterior.satisfied) +
+  geom_bar(
+    aes(x = reorder(country, satisfaction), y = 1),
+    stat = 'identity',
+    fill = 'coral'
+  ) +
+  geom_bar(
+    aes(x = reorder(country, satisfaction), y = satisfaction),
+    stat = 'identity',
+    fill = 'olivedrab2'
+  ) +
+  geom_text(
+    aes(x = country, y = 0, label = format(round(satisfaction, 4), nsmall = 4)),
+    hjust = -.3
+  ) +
+  coord_flip() +
+  labs(x = 'Country', y = 'Probability')
+
+ggsave(
+  paste('../plots/job_satisfaction_posterior_probabilities.png'), posterior.prob.plot)
+@
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=4,echo=FALSE>>=
+posterior.prob.plot
+@
+\caption{todo.}\label{fig_3}
+\end{figure}
+
+\section{Salary}
+todo
+
+<<echo=False>>=
+# SALARY: data preparation
+a = GetNonNaData('salary_midpoint', 'big_mac_index')
+# print(a)
+@
 
 \end{document}
