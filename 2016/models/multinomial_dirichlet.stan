@@ -6,9 +6,10 @@
 #   y: observed sample of length n
 #   a: prior parameters of length k
 #
-# Results:
-#   posterior distribution sample
-#   posterior predictive distribution sample
+# Returns:
+#   theta: posterior sample
+#   y_datasets: posterior predictive datasets of size n
+#   y_pred: posterior predictive sample
 
 data {
   int<lower=1> n;
@@ -18,6 +19,7 @@ data {
 }
 
 transformed data {
+  # y to vector of counts
   int<lower=0> y_[k];
   for (i in 1:k)
     y_[i] = 0;
@@ -36,6 +38,8 @@ model {
 }
 
 generated quantities {
-  int<lower=0> y_pred[k];
-  y_pred = multinomial_rng(theta, n);
+  int<lower=0> y_datasets[k];
+  int<lower=1, upper=k> y_pred;
+  y_datasets = multinomial_rng(theta, n);
+  y_pred = categorical_rng(theta);
 }

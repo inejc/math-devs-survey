@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.3.3)  17 MAY 2017 02:50
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.3.3)  25 MAY 2017 10:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -22,6 +22,17 @@ File: size10.clo 2014/09/29 v1.4h Standard LaTeX file (size option)
 \abovecaptionskip=\skip41
 \belowcaptionskip=\skip42
 \bibindent=\dimen102
+)
+(/usr/local/texlive/2015/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
+\fancy@headwidth=\skip43
+\f@ncyO@elh=\skip44
+\f@ncyO@erh=\skip45
+\f@ncyO@olh=\skip46
+\f@ncyO@orh=\skip47
+\f@ncyO@elf=\skip48
+\f@ncyO@erf=\skip49
+\f@ncyO@olf=\skip50
+\f@ncyO@orf=\skip51
 )
 (/usr/local/texlive/2015/texmf-dist/tex/latex/float/float.sty
 Package: float 2001/11/08 v1.3d Float enhancements (AL)
@@ -192,24 +203,24 @@ LaTeX Warning: Unused global option(s):
 (./report.aux)
 \openout1 = `report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 9.
-LaTeX Font Info:    Try loading font information for TS1+cmr on input line 9.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 22.
+LaTeX Font Info:    Try loading font information for TS1+cmr on input line 22.
  (/usr/local/texlive/2015/texmf-dist/tex/latex/base/ts1cmr.fd
 File: ts1cmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
-LaTeX Font Info:    ... okay on input line 9.
+LaTeX Font Info:    ... okay on input line 22.
 
 (/usr/local/texlive/2015/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -274,46 +285,59 @@ e
 ))
 (./report-concordance.tex)
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 18.
+(Font)              <12> on input line 31.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 18.
+(Font)              <8> on input line 31.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 18.
- <report-004.pdf, id=2, 361.35pt x 289.08pt>
-File: report-004.pdf Graphic file (type pdf)
+(Font)              <6> on input line 31.
+ <report-005.pdf, id=2, 361.35pt x 289.08pt>
+File: report-005.pdf Graphic file (type pdf)
 
-<use report-004.pdf>
-Package pdftex.def Info: report-004.pdf used on input line 40.
+<use report-005.pdf>
+Package pdftex.def Info: report-005.pdf used on input line 54.
 (pdftex.def)             Requested size: 361.35136pt x 289.0837pt.
  [1
 
 {/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] <report
--009.pdf, id=13, 361.35pt x 289.08pt>
-File: report-009.pdf Graphic file (type pdf)
+-010.pdf, id=13, 433.62pt x 650.43pt>
+File: report-010.pdf Graphic file (type pdf)
 
-<use report-009.pdf>
-Package pdftex.def Info: report-009.pdf used on input line 53.
-(pdftex.def)             Requested size: 361.35136pt x 289.0837pt.
- [2 <./report-004.pdf>] [3 <./report-009.pdf>]
-(./report.aux) ) 
+<use report-010.pdf>
+Package pdftex.def Info: report-010.pdf used on input line 67.
+(pdftex.def)             Requested size: 361.35136pt x 542.05013pt.
+ [2 <./report-005.pdf>]
+Overfull \vbox (15.99007pt too high) has occurred while \output is active []
+
+
+[3 <./report-010.pdf>] <report-012.pdf, id=30, 433.62pt x 650.43pt>
+File: report-012.pdf Graphic file (type pdf)
+
+<use report-012.pdf>
+Package pdftex.def Info: report-012.pdf used on input line 74.
+(pdftex.def)             Requested size: 361.35136pt x 542.05013pt.
+
+Overfull \vbox (15.99007pt too high) has occurred while \output is active []
+
+
+[4 <./report-012.pdf>] (./report.aux) ) 
 Here is how much of TeX's memory you used:
- 2749 strings out of 493033
- 39363 string characters out of 6134140
- 93046 words of memory out of 5000000
- 6230 multiletter control sequences out of 15000+600000
+ 2882 strings out of 493033
+ 40840 string characters out of 6134140
+ 95977 words of memory out of 5000000
+ 6358 multiletter control sequences out of 15000+600000
  21933 words of font info for 47 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 37i,6n,23p,576b,225s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts
-/cm/cmbx12.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/
-cm/cmr10.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm
-/cmr12.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/c
-mr17.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmt
-i10.pfb>
-Output written on report.pdf (3 pages, 79277 bytes).
+ 37i,10n,43p,576b,269s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2015/texmf-dist/font
+s/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2015/texmf-dist/fonts
+/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2015/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2015/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1
+/public/amsfonts/cm/cmti10.pfb>
+Output written on report.pdf (4 pages, 91184 bytes).
 PDF statistics:
- 47 PDF objects out of 1000 (max. 8388607)
- 31 compressed objects within 1 object stream
+ 56 PDF objects out of 1000 (max. 8388607)
+ 37 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 15 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 20 words of extra memory for PDF output out of 10000 (max. 10000000)
 

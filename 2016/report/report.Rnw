@@ -3,6 +3,19 @@
 \setlength{\topmargin}{-.5in}
 \setlength{\oddsidemargin}{.125in}
 \setlength{\textwidth}{6.25in}
+
+% page numbering style
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhf{}
+\fancyfoot[R]{\thepage}
+\fancypagestyle{plain}{%
+    \renewcommand{\headrulewidth}{0pt}%
+    \fancyhf{}%
+    \fancyfoot[R]{\thepage}%
+}
+
 \usepackage{float}
 
 \begin{document}
@@ -63,10 +76,8 @@ In order to obtain an adequately sizable sample, I have decided to include all r
 
 Number of mathematics developers per country can be seen in Figure \ref{fig_0}. Minimum number of 40 respondents is required to take the country into account and all others are placed into a single group called \textit{Other}. Note that selected countries and number of people may be different when doing inference of specific features due to missing values (i.e. optional answers in the survey). Majority of respondents are from United States, followed by a combination of countries with less than 40 developers, United Kingdom, Germany and India.
 
-\begin{figure}[H]
-\centering
-<<echo=FALSE, fig=True, width=5, height=4>>=
-ggplot(GetNonNaData('country')) +
+<<echo=FALSE>>=
+num.respondents.plot = ggplot(GetNonNaData('country')) +
   geom_bar(aes(x = reorder(country, country, function(x) - length(x))), fill = 'dodgerblue') +
   geom_text(stat = 'count', aes(x = country, label = ..count..), vjust = -.05) +
   labs(x = 'Country', y = 'Number of respondents') +
@@ -76,6 +87,14 @@ ggplot(GetNonNaData('country')) +
     hjust = 1,
     vjust = 1)
   )
+
+ggsave(paste('../plots/num_respondents_per_country.png'), num.respondents.plot)
+@
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE, fig=True, width=5, height=4>>=
+num.respondents.plot
 @
 \caption{Number of mathematics developers per country.}\label{fig_0}
 \end{figure}
@@ -85,44 +104,44 @@ todo
 
 <<echo=FALSE>>=
 # data preparation
-params = c('theta[1]', 'theta[2]', 'theta[3]', 'theta[4]', 'theta[5]', 'theta[6]')
+params = c('theta[1]', 'theta[2]', 'theta[3]', 'theta[4]', 'theta[5]')
 params.labels = c(
-  'I don\'t have a job',
   'I hate my job',
   'I\'m somewhat dissatisfied with my job',
   'I\'m neither satisfied nor dissatisfied',
   'I\'m somewhat satisfied with my job',
   'I love my job'
 )
+params.unsatisfied = c(1, 2, 3)
+params.satisfied = c(4, 5)
 
 data.satisfaction = GetNonNaData('job_satisfaction')
+data.satisfaction = data.satisfaction[data.satisfaction$job_satisfaction != 'I don\'t have a job',]
+data.satisfaction$job_satisfaction = droplevels(data.satisfaction$job_satisfaction)
 
 # reorder factor levels i.e.
-reordered.levels = levels(data.satisfaction$job_satisfaction)[c(1, 2, 5, 4, 6, 3)]
+reordered.levels = levels(data.satisfaction$job_satisfaction)[c(1, 4, 3, 5, 2)]
 data.satisfaction$job_satisfaction = factor(data.satisfaction$job_satisfaction, reordered.levels)
 @
 
 <<echo=FALSE>>=
 # stan data preparation
 countries = unique(data.satisfaction$country)
-
-k = 6
-prior.params = c(1, 1, 1, 1, 1, 1)
-
 stan.data = list()
 
 for (country in countries) {
   y = as.numeric(data.satisfaction[data.satisfaction$country == country, 'job_satisfaction'])
   stan.data[[country]] = list(
     n = length(y),
-    k = k,
+    k = length(params),
     y = y,
-    a = prior.params
+    a = c(1, 1, 1, 1, 1)
   )
 }
 @
 
 <<computation,results=hide,echo=FALSE>>=
+# model fitting and diagnostic plots saving
 stan.fits = list()
 
 for (country in countries) {
@@ -130,8 +149,8 @@ for (country in countries) {
   stan.fits[[country]] = stan(
     file = '../models/multinomial_dirichlet.stan',
     data = stan.data[[country]],
-    iter = 1000,
-    warmup = 100,
+    iter = 500,
+    warmup = 30,
     chains = 1
   )
 
@@ -143,13 +162,10 @@ for (country in countries) {
     ncol = 2
   )
 
-  summ = summary(
-    stan.fits[[country]],
-    pars = params
-  )
-  se = summ$summary[, c('se_mean')]
-  n_eff = as.integer(summ$summary[, c('n_eff')])
-  sampling.info = paste('se: ', se, ', n_eff', n_eff)
+  summ = summary(stan.fits[[country]], pars = params)$summary
+  se_mcmc = summ[, c('se_mean')]
+  n_eff = as.integer(summ[, c('n_eff')])
+  sampling.info = paste('se_mcmc: ', se_mcmc, ', n_eff', n_eff)
 
   trace.plot = trace.plot + annotate(
     'text',
@@ -159,36 +175,107 @@ for (country in countries) {
     hjust = 0,
     vjust = 0,
     size = 3,
-    fontface = 2,
+    fontface = 2
   )
-  ggsave(paste('../plots/traceplot_job_satisfaction_', country, '.png'), trace.plot)
+
+  ggsave(
+    paste('../plots/job_satisfaction_traceplot_', tolower(country), '.png', sep = ''),
+    trace.plot
+    )
 }
 @
 
 <<echo=FALSE>>=
-# todo: se_mean
-s = summary(stan.fits$Germany, pars = params)$summary
-s.df = data.frame(
-  mean = s[, c('mean')],
-  ci.low = s[, c('2.5%')],
-  ci.up = s[, c('97.5%')]
+# posterior predictive check (satisfied - not satisfied log odds ratio)
+empirical.logodds = data.frame()
+posterior.logodds = data.frame()
+
+for (country in countries) {
+  observed.dataset = stan.data[[country]]$y
+  n = stan.data[[country]]$n
+  pred.datasets = extract(stan.fits[[country]], pars = 'y_datasets')$y_datasets
+
+  # empirical log odds
+  num.satisfied = length(Filter(function(x) x %in% params.satisfied, observed.dataset))
+  num.unsatisfied = length(Filter(function(x) x %in% params.unsatisfied, observed.dataset))
+  df = data.frame(lo = log(num.satisfied / num.unsatisfied), n = n, country = country)
+  empirical.logodds = rbind(empirical.logodds, df)
+
+  # replicated log odds
+  num.satisfied = rowSums(pred.datasets[, params.satisfied])
+  num.unsatisfied = rowSums(pred.datasets[, params.unsatisfied])
+  df = data.frame(lo = log(num.satisfied / num.unsatisfied), country = country)
+  posterior.logodds = rbind(posterior.logodds, df)
+}
+
+posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
+  geom_histogram(binwidth = .3, fill = 'dodgerblue') +
+  geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
+  facet_wrap(~country, nrow = 5, ncol = 2) +
+  labs(x = 'Posterior predictive log odds', y = 'Count')
+
+ggsave(
+  paste('../plots/job_satisfaction_posterior_check.png'),
+  posterior.check.plot,
+  width = 6,
+  height = 9
 )
-s.df$label = factor(params.labels, params.labels)
 @
 
 \begin{figure}[H]
 \centering
-<<fig=True,width=5,height=4,echo=FALSE>>=
-ggplot(s.df) + 
-  geom_errorbar(aes(x = label, ymin = ci.low, ymax = ci.up), color = 'dodgerblue', size = 1.5, width = 0.7) + 
+<<fig=True,width=6,height=9,echo=FALSE>>=
+posterior.check.plot
+@
+\caption{todo.}\label{fig_1}
+\end{figure}
+
+<<echo=FALSE>>=
+# posterior parameters error bars data preparation
+errorbars = data.frame()
+
+for (country in countries) {
+  summ = summary(stan.fits[[country]], pars = params)$summary
+  df = data.frame(
+    mean = summ[, c('mean')],
+    ci.low = summ[, c('2.5%')],
+    ci.up = summ[, c('97.5%')]
+  )
+  df$label = factor(params.labels, params.labels)
+  df$country = country
+
+  errorbars = rbind(errorbars, df)
+}
+
+errorbars.plot = ggplot(errorbars) + 
+  geom_errorbar(
+    aes(x = label, ymin = ci.low, ymax = ci.up),
+    color = 'dodgerblue',
+    size = 1.2,
+    width = 0.7
+  ) + 
   geom_point(aes(x = label, y = mean), colour = 'coral', size = 2) +
   labs(x = 'Answer', y = 'Probability') +
   theme(axis.text.x = element_text(
-    size  = 10,
-    angle = 25,
+    size  = 8,
+    angle = 45,
     hjust = 1,
     vjust = 1)
-  )
+  ) +
+  facet_wrap(~country, nrow = 5, ncol = 2)
+
+ggsave(
+  paste('../plots/job_satisfaction_posterior_errorbars.png'),
+  errorbars.plot,
+  width = 6,
+  height = 9
+)
+@
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=6,height=9,echo=FALSE>>=
+errorbars.plot
 @
 \caption{todo.}\label{fig_2}
 \end{figure}

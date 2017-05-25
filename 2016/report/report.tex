@@ -3,6 +3,19 @@
 \setlength{\topmargin}{-.5in}
 \setlength{\oddsidemargin}{.125in}
 \setlength{\textwidth}{6.25in}
+
+% page numbering style
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhf{}
+\fancyfoot[R]{\thepage}
+\fancypagestyle{plain}{%
+    \renewcommand{\headrulewidth}{0pt}%
+    \fancyhf{}%
+    \fancyfoot[R]{\thepage}%
+}
+
 \usepackage{float}
 
 \usepackage{Sweave}
@@ -35,9 +48,10 @@ In order to obtain an adequately sizable sample, I have decided to include all r
 
 Number of mathematics developers per country can be seen in Figure \ref{fig_0}. Minimum number of 40 respondents is required to take the country into account and all others are placed into a single group called \textit{Other}. Note that selected countries and number of people may be different when doing inference of specific features due to missing values (i.e. optional answers in the survey). Majority of respondents are from United States, followed by a combination of countries with less than 40 developers, United Kingdom, Germany and India.
 
+
 \begin{figure}[H]
 \centering
-\includegraphics{report-004}
+\includegraphics{report-005}
 \caption{Number of mathematics developers per country.}\label{fig_0}
 \end{figure}
 
@@ -50,7 +64,14 @@ todo
 
 \begin{figure}[H]
 \centering
-\includegraphics{report-009}
+\includegraphics{report-010}
+\caption{todo.}\label{fig_1}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\includegraphics{report-012}
 \caption{todo.}\label{fig_2}
 \end{figure}
 
