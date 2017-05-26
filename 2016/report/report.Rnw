@@ -38,7 +38,7 @@ data.cleaned = read.csv('../data/stack_overflow_survey_2016_cleaned.csv')
 <<echo=FALSE>>=
 # helper functions
 GetNonNaData = function(summary.col, additional.cols = NULL) {
-  min.occurences = 40
+  min.occurences = 35
   CountNonNa = function(x) {length(x[!is.na(x)])}
 
   counts = tapply(data.cleaned[, summary.col], data.cleaned$country, CountNonNa)
@@ -89,7 +89,10 @@ num.respondents.plot = ggplot(GetNonNaData('country')) +
     vjust = 1)
   )
 
-ggsave(paste('../plots/num_respondents_per_country.png'), num.respondents.plot)
+ggsave(
+  paste('../plots/num_respondents_per_country.png'),
+  num.respondents.plot
+)
 @
 
 \begin{figure}[H]
@@ -182,7 +185,7 @@ for (country in countries) {
   ggsave(
     paste('../plots/job_satisfaction_traceplot_', tolower(country), '.png', sep = ''),
     trace.plot
-    )
+  )
 }
 @
 
@@ -213,20 +216,18 @@ for (country in countries) {
 posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
   geom_histogram(binwidth = .2, fill = 'dodgerblue') +
   geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
-  facet_wrap(~country, nrow = 5, ncol = 2) +
+  facet_wrap(~country) +
   labs(x = 'Posterior predictive log odds', y = 'Count')
 
 ggsave(
   paste('../plots/job_satisfaction_posterior_check.png'),
-  posterior.check.plot,
-  width = 6,
-  height = 9
+  posterior.check.plot
 )
 @
 
 \begin{figure}[H]
 \centering
-<<fig=True,width=6,height=9,echo=FALSE>>=
+<<fig=True,width=6,height=7,echo=FALSE>>=
 posterior.check.plot
 @
 \caption{todo.}\label{fig_1}
@@ -249,28 +250,26 @@ for (country in countries) {
   errorbars = rbind(errorbars, df)
 }
 
-errorbars.plot = ggplot(errorbars) + 
+errorbars.plot = ggplot(errorbars) +
   geom_errorbar(
     aes(x = label, ymin = ci.low, ymax = ci.up),
     color = 'dodgerblue',
     size = 1.2,
     width = 0.7
-  ) + 
+  ) +
   geom_point(aes(x = label, y = mean), colour = 'coral', size = 2) +
   labs(x = 'Answer', y = 'Probability') +
   theme(axis.text.x = element_text(
-    size  = 8,
-    angle = 45,
+    size  = 7,
+    angle = 55,
     hjust = 1,
     vjust = 1)
   ) +
-  facet_wrap(~country, nrow = 5, ncol = 2)
+  facet_wrap(~country)
 
 ggsave(
   paste('../plots/job_satisfaction_posterior_errorbars.png'),
-  errorbars.plot,
-  width = 6,
-  height = 9
+  errorbars.plot
 )
 @
 
@@ -312,7 +311,9 @@ posterior.prob.plot = ggplot(posterior.satisfied) +
   labs(x = 'Country', y = 'Probability')
 
 ggsave(
-  paste('../plots/job_satisfaction_posterior_probabilities.png'), posterior.prob.plot)
+  paste('../plots/job_satisfaction_posterior_probabilities.png'),
+  posterior.prob.plot
+)
 @
 
 \begin{figure}[H]
@@ -323,13 +324,57 @@ posterior.prob.plot
 \caption{todo.}\label{fig_3}
 \end{figure}
 
-\section{Salary}
+\section{Purchasing Power}
 todo
 
 <<echo=False>>=
-# SALARY: data preparation
-a = GetNonNaData('salary_midpoint', 'big_mac_index')
-# print(a)
+# PURCHASING POWER: data preparation
+data.salary = GetNonNaData('salary_midpoint', 'big_mac_index')
+data.salary$purchasing_power = data.salary$salary_midpoint / data.salary$big_mac_index
+
+# observed data density plot
+purchasing.power.observed.density.plot = ggplot(data.salary) +
+  geom_density(aes(x = purchasing_power, fill = country)) +
+  facet_wrap(~country) +
+  theme(
+    legend.position = 'none',
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    )
+  ) +
+  labs(x = 'Purchasing Power', y = 'Density')
+
+# observed data box plot
+purchasing.power.observed.box.plot = ggplot(data.salary) +
+  geom_boxplot(aes(x = country, y = purchasing_power, fill = country), notch = TRUE) +
+  theme(
+    legend.position = 'none',
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    )
+  ) +
+  labs(x = 'Country', y = 'Purchasing Power')
+
+ggsave(
+  paste('../plots/purchasing_power_observed_density.png'),
+  purchasing.power.observed.density.plot
+)
+ggsave(
+  paste('../plots/purchasing_power_observed_box_plot.png'),
+  purchasing.power.observed.box.plot
+)
 @
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=4,echo=FALSE>>=
+purchasing.power.observed.box.plot
+@
+\caption{todo.}\label{fig_4}
+\end{figure}
 
 \end{document}
