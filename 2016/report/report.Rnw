@@ -79,7 +79,7 @@ Number of mathematics developers per country can be seen in Figure \ref{fig_0}. 
 <<echo=FALSE>>=
 # NUMBER OF RESPONDENTS
 num.respondents.plot = ggplot(GetNonNaData('country')) +
-  geom_bar(aes(x = reorder(country, country, function(x) - length(x))), fill = 'dodgerblue') +
+  geom_bar(aes(x = reorder(country, country, function(x) - length(x))), fill = 'chocolate1') +
   geom_text(stat = 'count', aes(x = country, label = ..count..), vjust = -.05) +
   labs(x = 'Country', y = 'Number of respondents') +
   theme(axis.text.x = element_text(
@@ -103,233 +103,235 @@ num.respondents.plot
 \caption{Number of mathematics developers per country.}\label{fig_0}
 \end{figure}
 
-\section{Job Satisfaction}
-todo
-
-<<echo=FALSE>>=
-# JOB SATISFACTION: data preparation
-params = c('theta[1]', 'theta[2]', 'theta[3]', 'theta[4]', 'theta[5]')
-params.labels = c(
-  'I hate my job',
-  'I\'m somewhat dissatisfied with my job',
-  'I\'m neither satisfied nor dissatisfied',
-  'I\'m somewhat satisfied with my job',
-  'I love my job'
-)
-params.satisfied = 5
-params.unsatisfied = c(1, 2, 3, 4)
-
-data.satisfaction = GetNonNaData('job_satisfaction')
-data.satisfaction = data.satisfaction[data.satisfaction$job_satisfaction != 'I don\'t have a job',]
-data.satisfaction$job_satisfaction = droplevels(data.satisfaction$job_satisfaction)
-
-# reorder factor levels i.e.
-reordered.levels = levels(data.satisfaction$job_satisfaction)[c(1, 4, 3, 5, 2)]
-data.satisfaction$job_satisfaction = factor(data.satisfaction$job_satisfaction, reordered.levels)
-@
-
-<<echo=FALSE>>=
-# JOB SATISFACTION: stan data preparation
-countries = unique(data.satisfaction$country)
-stan.data = list()
-
-for (country in countries) {
-  y = as.numeric(data.satisfaction[data.satisfaction$country == country, 'job_satisfaction'])
-  stan.data[[country]] = list(
-    n = length(y),
-    k = length(params),
-    y = y,
-    a = c(1, 1, 1, 1, 1)
-  )
-}
-@
-
-<<computation,results=hide,echo=FALSE>>=
-# JOB SATISFACTION: model fitting and diagnostic plots saving
-stan.fits = list()
-
-for (country in countries) {
-  # fit a model
-  stan.fits[[country]] = stan(
-    file = '../models/multinomial_dirichlet.stan',
-    data = stan.data[[country]],
-    iter = 500,
-    warmup = 30,
-    chains = 1
-  )
-
-  # save a traceplot
-  trace.plot = traceplot(
-    stan.fits[[country]],
-    pars = params,
-    nrow = 3,
-    ncol = 2
-  )
-
-  summ = summary(stan.fits[[country]], pars = params)$summary
-  se_mcmc = summ[, c('se_mean')]
-  n_eff = as.integer(summ[, c('n_eff')])
-  sampling.info = paste('se_mcmc: ', se_mcmc, ', n_eff', n_eff)
-
-  trace.plot = trace.plot + annotate(
-    'text',
-    label = sampling.info,
-    x = 0,
-    y = 0,
-    hjust = 0,
-    vjust = 0,
-    size = 3,
-    fontface = 2
-  )
-
-  ggsave(
-    paste('../plots/job_satisfaction_traceplot_', tolower(country), '.png', sep = ''),
-    trace.plot
-  )
-}
-@
-
-<<echo=FALSE>>=
-# JOB SATISFACTION: posterior predictive check (satisfied - not satisfied log odds ratio)
-empirical.logodds = data.frame()
-posterior.logodds = data.frame()
-
-for (country in countries) {
-  observed.dataset = stan.data[[country]]$y
-  n = stan.data[[country]]$n
-  pred.datasets = extract(stan.fits[[country]], pars = 'y_datasets')$y_datasets
-
-  # empirical log odds
-  num.satisfied = length(Filter(function(x) x == params.satisfied, observed.dataset))
-  num.unsatisfied = length(Filter(function(x) x %in% params.unsatisfied, observed.dataset))
-  df = data.frame(lo = log(num.satisfied / num.unsatisfied), n = n, country = country)
-  empirical.logodds = rbind(empirical.logodds, df)
-
-  # replicated log odds
-  # num.satisfied = rowSums(pred.datasets[, params.satisfied])
-  num.satisfied = pred.datasets[, params.satisfied]
-  num.unsatisfied = rowSums(pred.datasets[, params.unsatisfied])
-  df = data.frame(lo = log(num.satisfied / num.unsatisfied), country = country)
-  posterior.logodds = rbind(posterior.logodds, df)
-}
-
-posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
-  geom_histogram(binwidth = .2, fill = 'dodgerblue') +
-  geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
-  facet_wrap(~country) +
-  labs(x = 'Posterior predictive log odds', y = 'Count')
-
-ggsave(
-  paste('../plots/job_satisfaction_posterior_check.png'),
-  posterior.check.plot
-)
-@
-
-\begin{figure}[H]
-\centering
-<<fig=True,width=6,height=7,echo=FALSE>>=
-posterior.check.plot
-@
-\caption{todo.}\label{fig_1}
-\end{figure}
-
-<<echo=FALSE>>=
-# JOB SATISFACTION: posterior parameters error bars data preparation
-errorbars = data.frame()
-
-for (country in countries) {
-  summ = summary(stan.fits[[country]], pars = params)$summary
-  df = data.frame(
-    mean = summ[, c('mean')],
-    ci.low = summ[, c('2.5%')],
-    ci.up = summ[, c('97.5%')]
-  )
-  df$label = factor(params.labels, params.labels)
-  df$country = country
-
-  errorbars = rbind(errorbars, df)
-}
-
-errorbars.plot = ggplot(errorbars) +
-  geom_errorbar(
-    aes(x = label, ymin = ci.low, ymax = ci.up),
-    color = 'dodgerblue',
-    size = 1.2,
-    width = 0.7
-  ) +
-  geom_point(aes(x = label, y = mean), colour = 'coral', size = 2) +
-  labs(x = 'Answer', y = 'Probability') +
-  theme(axis.text.x = element_text(
-    size  = 7,
-    angle = 55,
-    hjust = 1,
-    vjust = 1)
-  ) +
-  facet_wrap(~country)
-
-ggsave(
-  paste('../plots/job_satisfaction_posterior_errorbars.png'),
-  errorbars.plot
-)
-@
-
-\begin{figure}[H]
-\centering
-<<fig=True,width=6,height=9,echo=FALSE>>=
-errorbars.plot
-@
-\caption{todo.}\label{fig_2}
-\end{figure}
-
-<<echo=FALSE>>=
-# JOB SATISFACTION: posterior predictive probabilities
-posterior.satisfied = data.frame()
-
-for (country in countries) {
-  posterior.pred = extract(stan.fits[[country]], pars = 'y_pred')$y_pred
-  num.satisfied = length(Filter(function(x) x == params.satisfied, posterior.pred))
-  df = data.frame(satisfaction = num.satisfied / length(posterior.pred), country = country)
-  posterior.satisfied  = rbind(posterior.satisfied, df)
-}
-
-posterior.prob.plot = ggplot(posterior.satisfied) +
-  geom_bar(
-    aes(x = reorder(country, satisfaction), y = 1),
-    stat = 'identity',
-    fill = 'coral'
-  ) +
-  geom_bar(
-    aes(x = reorder(country, satisfaction), y = satisfaction),
-    stat = 'identity',
-    fill = 'olivedrab2'
-  ) +
-  geom_text(
-    aes(x = country, y = 0, label = format(round(satisfaction, 4), nsmall = 4)),
-    hjust = -.3
-  ) +
-  coord_flip() +
-  labs(x = 'Country', y = 'Probability')
-
-ggsave(
-  paste('../plots/job_satisfaction_posterior_probabilities.png'),
-  posterior.prob.plot
-)
-@
-
-\begin{figure}[H]
-\centering
-<<fig=True,width=5,height=4,echo=FALSE>>=
-posterior.prob.plot
-@
-\caption{todo.}\label{fig_3}
-\end{figure}
+% \section{Job Satisfaction}
+% todo
+% 
+% <<echo=FALSE>>=
+% # JOB SATISFACTION: data preparation
+% params = c('theta[1]', 'theta[2]', 'theta[3]', 'theta[4]', 'theta[5]')
+% params.labels = c(
+%   'I hate my job',
+%   'I\'m somewhat dissatisfied with my job',
+%   'I\'m neither satisfied nor dissatisfied',
+%   'I\'m somewhat satisfied with my job',
+%   'I love my job'
+% )
+% params.satisfied = 5
+% params.unsatisfied = c(1, 2, 3, 4)
+% 
+% data.satisfaction = GetNonNaData('job_satisfaction')
+% data.satisfaction$country = droplevels(data.satisfaction$country)
+% data.satisfaction = data.satisfaction[data.satisfaction$job_satisfaction != 'I don\'t have a job',]
+% data.satisfaction$job_satisfaction = droplevels(data.satisfaction$job_satisfaction)
+% 
+% # reorder factor levels i.e.
+% reordered.levels = levels(data.satisfaction$job_satisfaction)[c(1, 4, 3, 5, 2)]
+% data.satisfaction$job_satisfaction = factor(data.satisfaction$job_satisfaction, reordered.levels)
+% @
+% 
+% <<echo=FALSE>>=
+% # JOB SATISFACTION: stan data preparation
+% countries = unique(data.satisfaction$country)
+% stan.data = list()
+% 
+% for (country in countries) {
+%   y = as.numeric(data.satisfaction[data.satisfaction$country == country, 'job_satisfaction'])
+%   stan.data[[country]] = list(
+%     n = length(y),
+%     k = length(params),
+%     y = y,
+%     a = c(1, 1, 1, 1, 1)
+%   )
+% }
+% @
+% 
+% <<computation,results=hide,echo=FALSE>>=
+% # JOB SATISFACTION: model fitting and diagnostic plots saving
+% stan.fits = list()
+% 
+% for (country in countries) {
+%   # fit a model
+%   stan.fits[[country]] = stan(
+%     file = '../models/multinomial_dirichlet.stan',
+%     data = stan.data[[country]],
+%     iter = 500,
+%     warmup = 30,
+%     chains = 1
+%   )
+% 
+%   # save a traceplot
+%   trace.plot = traceplot(
+%     stan.fits[[country]],
+%     pars = params,
+%     nrow = 3,
+%     ncol = 2
+%   )
+% 
+%   summ = summary(stan.fits[[country]], pars = params)$summary
+%   se_mcmc = summ[, c('se_mean')]
+%   n_eff = as.integer(summ[, c('n_eff')])
+%   sampling.info = paste('se_mcmc:', round(se_mcmc, digits=5), 'n_eff:', n_eff)
+% 
+%   trace.plot = trace.plot + annotate(
+%     'text',
+%     label = sampling.info,
+%     x = 0,
+%     y = 0,
+%     hjust = 0,
+%     vjust = 0,
+%     size = 3,
+%     fontface = 2
+%   )
+% 
+%   ggsave(
+%     paste('../plots/job_satisfaction_traceplot_', tolower(country), '.png', sep = ''),
+%     trace.plot
+%   )
+% }
+% @
+% 
+% <<echo=FALSE>>=
+% # JOB SATISFACTION: posterior predictive check (satisfied - not satisfied log odds ratio)
+% empirical.logodds = data.frame()
+% posterior.logodds = data.frame()
+% 
+% for (country in countries) {
+%   observed.dataset = stan.data[[country]]$y
+%   n = stan.data[[country]]$n
+%   pred.datasets = extract(stan.fits[[country]], pars = 'y_datasets')$y_datasets
+% 
+%   # empirical log odds
+%   num.satisfied = length(Filter(function(x) x == params.satisfied, observed.dataset))
+%   num.unsatisfied = length(Filter(function(x) x %in% params.unsatisfied, observed.dataset))
+%   df = data.frame(lo = log(num.satisfied / num.unsatisfied), n = n, country = country)
+%   empirical.logodds = rbind(empirical.logodds, df)
+% 
+%   # replicated log odds
+%   # num.satisfied = rowSums(pred.datasets[, params.satisfied])
+%   num.satisfied = pred.datasets[, params.satisfied]
+%   num.unsatisfied = rowSums(pred.datasets[, params.unsatisfied])
+%   df = data.frame(lo = log(num.satisfied / num.unsatisfied), country = country)
+%   posterior.logodds = rbind(posterior.logodds, df)
+% }
+% 
+% posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
+%   geom_histogram(binwidth = .2, fill = 'dodgerblue') +
+%   geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
+%   facet_wrap(~country) +
+%   labs(x = 'Posterior predictive log odds', y = 'Count')
+% 
+% ggsave(
+%   paste('../plots/job_satisfaction_posterior_check.png'),
+%   posterior.check.plot
+% )
+% @
+% 
+% \begin{figure}[H]
+% \centering
+% <<fig=True,width=6,height=7,echo=FALSE>>=
+% posterior.check.plot
+% @
+% \caption{todo.}\label{fig_1}
+% \end{figure}
+% 
+% <<echo=FALSE>>=
+% # JOB SATISFACTION: posterior parameters error bars data preparation
+% errorbars = data.frame()
+% 
+% for (country in countries) {
+%   summ = summary(stan.fits[[country]], pars = params)$summary
+%   df = data.frame(
+%     mean = summ[, c('mean')],
+%     ci.low = summ[, c('2.5%')],
+%     ci.up = summ[, c('97.5%')]
+%   )
+%   df$label = factor(params.labels, params.labels)
+%   df$country = country
+% 
+%   errorbars = rbind(errorbars, df)
+% }
+% 
+% errorbars.plot = ggplot(errorbars) +
+%   geom_errorbar(
+%     aes(x = label, ymin = ci.low, ymax = ci.up),
+%     color = 'dodgerblue',
+%     size = 1,
+%     width = 0.7
+%   ) +
+%   geom_point(aes(x = label, y = mean), colour = 'red', size = 2) +
+%   labs(x = 'Answer', y = 'Probability') +
+%   theme(axis.text.x = element_text(
+%     size  = 7,
+%     angle = 55,
+%     hjust = 1,
+%     vjust = 1)
+%   ) +
+%   facet_wrap(~country)
+% 
+% ggsave(
+%   paste('../plots/job_satisfaction_posterior_errorbars.png'),
+%   errorbars.plot
+% )
+% @
+% 
+% \begin{figure}[H]
+% \centering
+% <<fig=True,width=6,height=9,echo=FALSE>>=
+% errorbars.plot
+% @
+% \caption{todo.}\label{fig_2}
+% \end{figure}
+% 
+% <<echo=FALSE>>=
+% # JOB SATISFACTION: posterior predictive probabilities
+% posterior.satisfied = data.frame()
+% 
+% for (country in countries) {
+%   posterior.pred = extract(stan.fits[[country]], pars = 'y_pred')$y_pred
+%   num.satisfied = length(Filter(function(x) x == params.satisfied, posterior.pred))
+%   df = data.frame(satisfaction = num.satisfied / length(posterior.pred), country = country)
+%   posterior.satisfied  = rbind(posterior.satisfied, df)
+% }
+% 
+% posterior.prob.plot = ggplot(posterior.satisfied) +
+%   geom_bar(
+%     aes(x = reorder(country, satisfaction), y = 1),
+%     stat = 'identity',
+%     fill = 'coral'
+%   ) +
+%   geom_bar(
+%     aes(x = reorder(country, satisfaction), y = satisfaction),
+%     stat = 'identity',
+%     fill = 'olivedrab2'
+%   ) +
+%   geom_text(
+%     aes(x = country, y = 0, label = format(round(satisfaction, 4), nsmall = 4)),
+%     hjust = -.3
+%   ) +
+%   coord_flip() +
+%   labs(x = 'Country', y = 'Probability')
+% 
+% ggsave(
+%   paste('../plots/job_satisfaction_posterior_probabilities.png'),
+%   posterior.prob.plot
+% )
+% @
+% 
+% \begin{figure}[H]
+% \centering
+% <<fig=True,width=5,height=4,echo=FALSE>>=
+% posterior.prob.plot
+% @
+% \caption{todo.}\label{fig_3}
+% \end{figure}
 
 \section{Purchasing Power}
 todo
 
 <<echo=False>>=
-# PURCHASING POWER: data preparation
+# PURCHASING POWER: data preparation, observed box plot construction
 data.salary = GetNonNaData('salary_midpoint', 'big_mac_index')
+data.salary$country = droplevels(data.salary$country)
 data.salary$purchasing_power = data.salary$salary_midpoint / data.salary$big_mac_index
 
 # observed data density plot
@@ -376,5 +378,87 @@ purchasing.power.observed.box.plot
 @
 \caption{todo.}\label{fig_4}
 \end{figure}
+
+<<echo=FALSE>>=
+# PURCHASING POWER: stan data preparation
+countries = unique(data.salary$country)
+
+k = length(countries)
+n = c()
+ys = list()
+
+for (country in countries) {
+  country.purchasing_power = data.salary$purchasing_power[data.salary$country == country]
+  n = c(n, length(country.purchasing_power))
+  ys[[country]] = country.purchasing_power
+}
+
+max_n = max(n)
+y = data.frame(matrix(NA, nrow = max_n, ncol = k))
+colnames(y) = countries
+
+for (country in countries) {
+  length(ys[[country]]) = max_n
+  y[, country] = ys[[country]]
+}
+
+# stan doesn't support NA
+y[is.na(y)] = 0
+
+stan.data = list(
+  k = k,
+  n = n,
+  max_n = max_n,
+  y = y,
+  # between group priors
+  bg_mu_mu = 0,
+  bg_mu_s2 = 1e6,
+  bg_s2_a = .001,
+  bg_s2_b = .001,
+  # within group priors
+  wg_s2_a = .001,
+  wg_s2_b = .001
+)
+@
+
+<<computation,results=hide,echo=FALSE>>=
+# PURCHASING POWER: model fitting and diagnostic plots saving
+params = paste('wg_mu[', 1:k, ']', sep = '')
+
+stan.fit = stan(
+  file = '../models/hierarchical_normal_inv_gamma.stan',
+  data = stan.data,
+  iter = 6000,
+  warmup = 1000,
+  chains = 1
+)
+
+# save a traceplot
+trace.plot = traceplot(stan.fit, pars = params)
+
+summ = summary(stan.fit, pars = params)$summary
+se_mcmc = summ[, c('se_mean')]
+n_eff = as.integer(summ[, c('n_eff')])
+sampling.info.se = paste('se_mcmc:', round(se_mcmc, digits=5))
+sampling.info.eff = paste('n_eff:', n_eff)
+sampling.info = paste(sampling.info.se, sampling.info.eff, sep = '\n')
+
+trace.plot = trace.plot + annotate(
+  'text',
+  label = sampling.info,
+  x = 0,
+  y = 5000,
+  hjust = 0,
+  vjust = 0,
+  size = 3,
+  fontface = 2
+)
+
+ggsave('../plots/purchasing_power_traceplot.png', trace.plot)
+@
+
+<<echo=FALSE>>=
+print(summary(stan.fit))
+@
 
 \end{document}
