@@ -12,7 +12,7 @@
 #   y_pred: posterior predictive sample
 
 data {
-  int<lower=1> n;
+  int<lower=0> n;
   int<lower=2> k;
   int<lower=1, upper=k> y[n];
   vector<lower=0>[k] a;
