@@ -30,5 +30,8 @@ nrow(survey.cleaned)
 survey.cleaned = survey.cleaned[complete.cases(survey.cleaned[, 'country']),]
 nrow(survey.cleaned)
 
+# shorter name is more convenient for plots
+levels(survey.cleaned$country)[levels(survey.cleaned$country) == 'Russian Federation'] = 'Russia'
+
 write.csv(survey.cleaned, '../data/stack_overflow_survey_2016_cleaned.csv', na = 'NA', row.names = F)
 ```

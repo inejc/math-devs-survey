@@ -53,6 +53,13 @@ GetNonNaData = function(summary.col, additional.cols = NULL) {
 
   return(rbind(df.selected, df.other))
 }
+
+DummyEncode = function(df, col.name) {
+  dummy = model.matrix(~factor(df[, col.name]))
+  colnames(dummy) = paste(col.name, 1:ncol(dummy), sep = '_')
+  df = cbind(df[, names(df) != col.name], dummy[, 2:ncol(dummy)])
+  return(df)
+}
 @
 
 \title{Mathematics Developers Survey 2016}
@@ -81,9 +88,9 @@ Number of mathematics developers per country can be seen in Figure \ref{fig_0}. 
 <<echo=FALSE>>=
 # NUMBER OF RESPONDENTS
 num.respondents.plot = ggplot(GetNonNaData('country')) +
-  geom_bar(aes(x = reorder(country, country, function(x) - length(x))), fill = 'chocolate1') +
+  geom_bar(aes(x = reorder(country, country, function(x) - length(x))), fill = 'lightsalmon') +
   geom_text(stat = 'count', aes(x = country, label = ..count..), vjust = -.05) +
-  labs(x = 'Country', y = 'Number of respondents') +
+  labs(x = 'country', y = 'number of respondents') +
   theme(axis.text.x = element_text(
     size  = 10,
     angle = 45,
@@ -156,8 +163,8 @@ for (country in countries) {
   stan.fits[[country]] = stan(
     file = '../models/multinomial_dirichlet.stan',
     data = stan.data[[country]],
-    iter = 1000,
-    warmup = 200,
+    iter = 5000,
+    warmup = 300,
     chains = 1
   )
 
@@ -203,7 +210,7 @@ posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
   geom_histogram(binwidth = .2, fill = 'dodgerblue') +
   geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
   facet_wrap(~country) +
-  labs(x = 'Posterior predictive log odds', y = 'Count')
+  labs(x = 'posterior predictive log odds', y = 'count')
 
 ggsave(
   paste('../plots/job_satisfaction_posterior_check.png'),
@@ -213,7 +220,7 @@ ggsave(
 
 \begin{figure}[H]
 \centering
-<<fig=True,width=6,height=7,echo=FALSE>>=
+<<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.check.plot
 @
 \caption{todo.}\label{fig_1}
@@ -238,19 +245,14 @@ for (country in countries) {
 
 errorbars.plot = ggplot(errorbars) +
   geom_errorbar(
-    aes(x = label, ymin = ci.low, ymax = ci.up),
-    color = 'dodgerblue',
+    aes(x = label, ymin = ci.low, ymax = ci.up, color = label),
     size = 1,
-    width = 0.7
+    width = 0.2
   ) +
-  geom_point(aes(x = label, y = mean), colour = 'red', size = 2) +
-  labs(x = 'Answer', y = 'Probability') +
-  theme(axis.text.x = element_text(
-    size  = 7,
-    angle = 55,
-    hjust = 1,
-    vjust = 1)
-  ) +
+  geom_point(aes(x = label, y = mean), fill = 'white', size = 2, shape = 21) +
+  labs(x = 'answer', y = 'probability') +
+  theme(legend.position = 'bottom', legend.direction = 'vertical', axis.text.x = element_blank()) +
+  guides(color = guide_legend(nrow = 3)) +
   facet_wrap(~country)
 
 ggsave(
@@ -261,7 +263,7 @@ ggsave(
 
 \begin{figure}[H]
 \centering
-<<fig=True,width=6,height=9,echo=FALSE>>=
+<<fig=True,width=5,height=6,echo=FALSE>>=
 errorbars.plot
 @
 \caption{todo.}\label{fig_2}
@@ -282,7 +284,7 @@ posterior.prob.plot = ggplot(posterior.satisfied) +
   geom_bar(
     aes(x = reorder(country, satisfaction), y = 1),
     stat = 'identity',
-    fill = 'coral'
+    fill = 'lightsalmon'
   ) +
   geom_bar(
     aes(x = reorder(country, satisfaction), y = satisfaction),
@@ -294,7 +296,7 @@ posterior.prob.plot = ggplot(posterior.satisfied) +
     hjust = -.3
   ) +
   coord_flip() +
-  labs(x = 'Country', y = 'Probability')
+  labs(x = 'country', y = 'probability')
 
 ggsave(
   paste('../plots/job_satisfaction_posterior_probabilities.png'),
@@ -331,7 +333,7 @@ purchasing.power.observed.density.plot = ggplot(data.salary) +
       vjust = 1
     )
   ) +
-  labs(x = 'Purchasing Power', y = 'Density')
+  labs(x = 'purchasing power', y = 'density')
 
 # observed data box plot
 purchasing.power.observed.box.plot = ggplot(data.salary) +
@@ -344,7 +346,7 @@ purchasing.power.observed.box.plot = ggplot(data.salary) +
       vjust = 1
     )
   ) +
-  labs(x = 'Country', y = 'Purchasing Power')
+  labs(x = 'country', y = 'purchasing power')
 
 ggsave(
   paste('../plots/purchasing_power_observed_density.png'),
@@ -418,8 +420,8 @@ params = c(
 stan.fit = stan(
   file = '../models/hierarchical_normal_inv_gamma.stan',
   data = stan.data,
-  iter = 1000,
-  warmup = 200,
+  iter = 5000,
+  warmup = 300,
   chains = 1
 )
 
@@ -435,10 +437,11 @@ todo
 
 <<echo=FALSE>>=
 # REALATIONSHIPS: data preparation
+# todo: industry, company_size_range, education
+
 cols = c(
-  'age_midpoint', 'gender', 'experience_midpoint', 'salary_midpoint',
-  'team_size_range', 'women_on_team', 'remote', 'job_satisfaction',
-  'big_mac_index'
+  'age_midpoint', 'gender', 'salary_midpoint', 'remote', 'job_satisfaction',
+  'big_mac_index', 'aliens', 'unit_testing', 'commit_frequency'
 )
 relationships.data = na.omit(data.cleaned[, cols])
 
@@ -461,26 +464,22 @@ relationships.data$job_satisfaction = as.numeric(relationships.data$job_satisfac
 # 'Female'
 # 'Male'
 relationships.data$gender = as.numeric(relationships.data$gender)
+relationships.data$gender_male = relationships.data$gender - 1
+relationships.data = relationships.data[, names(relationships.data) != 'gender']
 
-# team size
-# '1-4 people'
-# '5-9 people'
-# '10-14 people'
-# '15-20 people'
-# '20+ people'
-relationships.data = relationships.data[!relationships.data$team_size_range %in% c('I am not on a team', 'I don\'t know'),]
-relationships.data$team_size_range = droplevels(relationships.data$team_size_range)
-reordered.levels = levels(relationships.data$team_size_range)[c(1, 5, 2, 3, 4)]
-relationships.data$team_size_range = factor(relationships.data$team_size_range, reordered.levels)
-relationships.data$team_size_range = as.numeric(relationships.data$team_size_range)
+#aliens
+# 'No'
+# 'Yes'
+relationships.data$aliens = as.numeric(relationships.data$aliens)
+relationships.data$aliens = relationships.data$aliens - 1
 
-# women on team
-# 0, ..., 10, 11+
-relationships.data = relationships.data[!relationships.data$women_on_team %in% c('I am not on a \"team\"', 'I\'m not sure'),]
-relationships.data$women_on_team = droplevels(relationships.data$women_on_team)
-reordered.levels = levels(relationships.data$women_on_team)[c(1, 2, 5:12, 3, 4)]
-relationships.data$women_on_team = factor(relationships.data$women_on_team, reordered.levels)
-relationships.data$women_on_team = as.numeric(relationships.data$women_on_team) - 1
+# unit testing
+# 'No'
+# 'Yes'
+relationships.data = relationships.data[relationships.data$unit_testing != 'I don\'t know',]
+relationships.data$unit_testing = droplevels(relationships.data$unit_testing)
+relationships.data$unit_testing = as.numeric(relationships.data$unit_testing)
+relationships.data$unit_testing = relationships.data$unit_testing - 1
 
 # remote
 # 'Never'
@@ -490,32 +489,40 @@ relationships.data$women_on_team = as.numeric(relationships.data$women_on_team) 
 reordered.levels = levels(relationships.data$remote)[c(3, 2, 4, 1)]
 relationships.data$remote = factor(relationships.data$remote, reordered.levels)
 relationships.data$remote = as.numeric(relationships.data$remote)
+# 'No'
+# 'Yes'
+relationships.data$remote = as.numeric(relationships.data$remote > 2)
+# relationships.data = DummyEncode(relationships.data, 'remote')
+
+# commit frequency
+# 'I never check-in or commit code'
+# 'A few times a month'
+# 'A couple times a week'
+# 'Once a day'
+# 'Multiple times a day'
+omit = 'I don\'t \"check-in or commit code\", but I do put code into production somewhat frequently'
+relationships.data = relationships.data[relationships.data$commit_frequency != omit,]
+relationships.data$commit_frequency = droplevels(relationships.data$commit_frequency)
+reordered.levels = levels(relationships.data$commit_frequency)[c(3, 2, 1, 5, 4)]
+relationships.data$commit_frequency = factor(relationships.data$commit_frequency, reordered.levels)
+relationships.data$commit_frequency = as.numeric(relationships.data$commit_frequency)
+# relationships.data = DummyEncode(relationships.data, 'commit_frequency')
+# commit at least once a day
+# 'No'
+# 'Yes'
+relationships.data$commit_once_a_day = as.numeric(relationships.data$commit_frequency > 3)
+relationships.data = relationships.data[, names(relationships.data) != 'commit_frequency']
 @
 
 <<echo=FALSE>>=
 # REALATIONSHIPS: stan data preparation
 x = relationships.data[, names(relationships.data) != 'job_satisfaction']
-y = relationships.data$job_satisfaction
 
-# dummy variables
-DummyEncode = function(df, col.name) {
-  dummy = model.matrix(~factor(df[, col.name]))
-  colnames(dummy) = paste(col.name, 1:ncol(dummy), sep = '_')
-  df = cbind(df[, names(df) != col.name], dummy[, 2:ncol(dummy)])
-  return(df)
-}
-
-x$gender_male = x$gender - 1
-x = x[, names(x) != 'gender']
-x = DummyEncode(x, 'remote')
-x = DummyEncode(x, 'team_size_range')
-
-# scale, center
+# center, scale
 x$purchasing_power = (x$purchasing_power - mean(x$purchasing_power)) / sd(x$purchasing_power)
-x$experience_midpoint = (x$experience_midpoint - mean(x$experience_midpoint)) / sd(x$experience_midpoint)
 x$age_midpoint = (x$age_midpoint - mean(x$age_midpoint)) / sd(x$age_midpoint)
-# women_on_team?
-x$women_on_team = (x$women_on_team - mean(x$women_on_team)) / sd(x$women_on_team)
+
+y = relationships.data$job_satisfaction
 
 k = length(unique(y))
 stan.data = list(
@@ -527,6 +534,7 @@ stan.data = list(
 )
 @
 
+todo
 <<computation,results=hide,echo=FALSE>>=
 # RELATIONSHIPS: model fitting and diagnostic plots saving
 params = c(
@@ -537,8 +545,8 @@ params = c(
 stan.fit = stan(
   file = '../models/ordinal_logistic_regression.stan',
   data = stan.data,
-  iter = 1000,
-  warmup = 200,
+  iter = 5000,
+  warmup = 300,
   chains = 1
 )
 
@@ -589,6 +597,8 @@ posterior.params.plot = ggplot(stack(posterior.params)) +
     )
   ) +
   labs(x = 'todo', y = 'todo')
+
+ggsave('../plots/relationships_posterior_params_boxplot.png', posterior.params.plot)
 @
 
 \begin{figure}[H]

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.3.3)  28 MAY 2017 20:51
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.3.3)  30 MAY 2017 00:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -295,29 +295,25 @@ Package pdftex.def Info: report-005.pdf used on input line 54.
  [1
 
 {/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] <report
--010.pdf, id=13, 433.62pt x 505.89pt>
+-010.pdf, id=13, 361.35pt x 289.08pt>
 File: report-010.pdf Graphic file (type pdf)
 
 <use report-010.pdf>
 Package pdftex.def Info: report-010.pdf used on input line 67.
-(pdftex.def)             Requested size: 361.35136pt x 421.59453pt.
+(pdftex.def)             Requested size: 361.35136pt x 289.0837pt.
  [2 <./report-005.pdf>]
-<report-012.pdf, id=22, 433.62pt x 650.43pt>
+<report-012.pdf, id=22, 361.35pt x 433.62pt>
 File: report-012.pdf Graphic file (type pdf)
  <use report-012.pdf>
 Package pdftex.def Info: report-012.pdf used on input line 74.
-(pdftex.def)             Requested size: 361.35136pt x 542.05013pt.
- [3 <./report-010.pdf>]
-Overfull \vbox (15.99007pt too high) has occurred while \output is active []
-
-
-[4 <./report-012.pdf>] <report-014.pdf, id=39, 361.35pt x 289.08pt>
+(pdftex.def)             Requested size: 361.35136pt x 433.62555pt.
+ [3 <./report-010.pdf>] <report-014.pdf, id=31, 361.35pt x 289.08pt>
 File: report-014.pdf Graphic file (type pdf)
-
-<use report-014.pdf>
+ <use report-014.pdf>
 Package pdftex.def Info: report-014.pdf used on input line 81.
 (pdftex.def)             Requested size: 361.35136pt x 289.0837pt.
- <report-016.pdf, id=40, 361.35pt x 289.08pt>
+
+[4 <./report-012.pdf>] <report-016.pdf, id=40, 361.35pt x 289.08pt>
 File: report-016.pdf Graphic file (type pdf)
 
 <use report-016.pdf>
@@ -332,20 +328,20 @@ Package pdftex.def Info: report-017.pdf used on input line 98.
  [6 <./report-016.pdf>] <report-024.pdf, id=58, 361.35pt x 289.08pt>
 File: report-024.pdf Graphic file (type pdf)
  <use report-024.pdf>
-Package pdftex.def Info: report-024.pdf used on input line 113.
+Package pdftex.def Info: report-024.pdf used on input line 114.
 (pdftex.def)             Requested size: 361.35136pt x 289.0837pt.
 
 [7 <./report-017.pdf>] <report-026.pdf, id=68, 361.35pt x 289.08pt>
 File: report-026.pdf Graphic file (type pdf)
 
 <use report-026.pdf>
-Package pdftex.def Info: report-026.pdf used on input line 120.
+Package pdftex.def Info: report-026.pdf used on input line 121.
 (pdftex.def)             Requested size: 361.35136pt x 289.0837pt.
  [8 <./report-024.pdf>] [9 <./report-026.pdf>]
 (./report.aux) ) 
 Here is how much of TeX's memory you used:
  2911 strings out of 493033
- 41419 string characters out of 6134140
+ 41423 string characters out of 6134140
  96008 words of memory out of 5000000
  6382 multiletter control sequences out of 15000+600000
  21933 words of font info for 47 fonts, out of 8000000 for 9000
@@ -357,7 +353,7 @@ cm/cmr10.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm
 /cmr12.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/c
 mr17.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmt
 i10.pfb>
-Output written on report.pdf (9 pages, 173312 bytes).
+Output written on report.pdf (9 pages, 176832 bytes).
 PDF statistics:
  104 PDF objects out of 1000 (max. 8388607)
  69 compressed objects within 1 object stream
