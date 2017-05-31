@@ -39,17 +39,31 @@ data.cleaned = read.csv('../data/stack_overflow_survey_2016_cleaned.csv')
 
 <<echo=FALSE>>=
 # helper functions
-GetNonNaData = function(summary.col, additional.cols = NULL) {
-  min.occurences = 35
-  CountNonNa = function(x) {length(x[!is.na(x)])}
+CountNonNa = function(x) {length(x[!is.na(x)])}
+min.occurences = 35
 
+GetNonNaDataCountry = function(summary.col, additional.cols = NULL) {
   counts = tapply(data.cleaned[, summary.col], data.cleaned$country, CountNonNa)
   countries = names(counts[counts >= min.occurences])
 
   result.cols = c('country', summary.col, additional.cols)
+  # todo: impute missing values
   df.selected = na.omit(data.cleaned[data.cleaned$country %in% countries, result.cols])
   df.other = na.omit(data.cleaned[!data.cleaned$country %in% countries, result.cols])
   df.other$country = 'Other'
+
+  return(rbind(df.selected, df.other))
+}
+
+GetNonNaDataIndustry = function(summary.col, additional.cols = NULL) {
+  counts = tapply(data.cleaned[, summary.col], data.cleaned$industry, CountNonNa)
+  industries = names(counts[counts >= min.occurences])
+
+  result.cols = c('industry', summary.col, additional.cols)
+  # todo: impute missing values
+  df.selected = na.omit(data.cleaned[data.cleaned$industry %in% industries, result.cols])
+  df.other = na.omit(data.cleaned[!data.cleaned$industry %in% industries, result.cols])
+  df.other$industry = 'Other'
 
   return(rbind(df.selected, df.other))
 }
@@ -63,7 +77,7 @@ DummyEncode = function(df, col.name) {
 @
 
 \title{Mathematics Developers Survey 2016}
-\author{Nejc Ileni\v{c}}
+\author{Nejc Ilenic}
 \date{}
 \maketitle
 
@@ -76,19 +90,21 @@ The survey consisted mostly of demographic questions and questions regarding pro
 
 An important thing to note when interpreting the results however is that this data may not be a represantative sample from the population of mathematics developers. One should keep in mind that these are developers who were aware of the survey and were willing to answer the questions.
 
-\section{Data Preparation}
+\section{Data preparation}
 The dataset was constructed from survey that took place from January 7 to January 25, 2016, with responses originating from Stack Overflow, Stack Exchange technical sites, Facebook and Twitter. Raw data consists of 56030 samples and 66 features, all of which are optional.
 
 In order to obtain an adequately sizable sample, I have decided to include all respondents that belong to the occupation group of mathematics developers, which includes data scientists, machine learning developers and developers with statistics and mathematics backgrounds. After filtering out other occupations and responses with unknown countries we are left with 2132 samples.
 
-\vspace{2mm}
+\section{Exploratory analysis}
+todo
 
+\subsection{Job satisfaction per country}
 Number of mathematics developers per country can be seen in Figure \ref{fig_0}. Minimum number of 40 respondents is required to take the country into account and all others are placed into a single group called \textit{Other}. Note that selected countries and number of people may be different when doing inference of specific features due to missing values (i.e. optional answers in the survey). Majority of respondents are from United States, followed by a combination of countries with less than 40 developers, United Kingdom, Germany and India.
 
 <<echo=FALSE>>=
-# NUMBER OF RESPONDENTS
-num.respondents.plot = ggplot(GetNonNaData('country')) +
-  geom_bar(aes(x = reorder(country, country, function(x) - length(x))), fill = 'lightsalmon') +
+# NUMBER OF RESPONDENTS PER COUNTRY
+num.respondents.plot = ggplot(GetNonNaDataCountry('country')) +
+  geom_bar(aes(x = reorder(country, country, function(x) - length(x))), fill = '#ff5900') +
   geom_text(stat = 'count', aes(x = country, label = ..count..), vjust = -.05) +
   labs(x = 'country', y = 'number of respondents') +
   theme(axis.text.x = element_text(
@@ -112,10 +128,6 @@ num.respondents.plot
 \caption{Number of mathematics developers per country.}\label{fig_0}
 \end{figure}
 
-\section{Exploratory Analysis}
-todo
-
-\subsection{Job Satisfaction}
 todo
 
 <<echo=FALSE>>=
@@ -131,7 +143,7 @@ params.labels = c(
 params.satisfied = 5
 params.unsatisfied = c(1, 2, 3, 4)
 
-data.satisfaction = GetNonNaData('job_satisfaction')
+data.satisfaction = GetNonNaDataCountry('job_satisfaction')
 data.satisfaction$country = droplevels(data.satisfaction$country)
 data.satisfaction = data.satisfaction[data.satisfaction$job_satisfaction != 'I don\'t have a job',]
 data.satisfaction$job_satisfaction = droplevels(data.satisfaction$job_satisfaction)
@@ -167,7 +179,7 @@ for (country in countries) {
     file = '../models/multinomial_dirichlet.stan',
     data = stan.data[[country]],
     iter = 1000,
-    warmup = 300,
+    warmup = 400,
     chains = 1
   )
 
@@ -215,7 +227,7 @@ posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
   labs(x = 'posterior predictive log odds', y = 'count')
 
 ggsave(
-  paste('../plots/job_satisfaction_comparison_posterior_check.png'),
+  paste('../plots/job_satisfaction_countries_comparison_posterior_check.png'),
   posterior.check.plot
 )
 @
@@ -267,7 +279,7 @@ posterior.params.plot = ggplot(posterior.params) +
   labs(x = 'todo', y = 'todo')
 
 ggsave(
-  paste('../plots/job_satisfaction_comparison_posterior_parameters.png'),
+  paste('../plots/job_satisfaction_countries_comparison_posterior_parameters.png'),
   posterior.params.plot
 )
 @
@@ -279,6 +291,9 @@ posterior.params.plot
 @
 \caption{todo.}\label{fig_2}
 \end{figure}
+
+\subsection{Effects on job satisfaction}
+todo
 
 <<echo=FALSE>>=
 # JOB SATISFACTION EFFECTS: data preparation
@@ -331,7 +346,6 @@ relationships.data$remote = as.numeric(relationships.data$remote)
 # 'No'
 # 'Yes'
 relationships.data$remote = as.numeric(relationships.data$remote > 2)
-# relationships.data = DummyEncode(relationships.data, 'remote')
 
 # commit_frequency
 # 'I never check-in or commit code'
@@ -399,7 +413,7 @@ stan.fit = stan(
   file = '../models/ordinal_logistic_regression.stan',
   data = stan.data,
   iter = 1000,
-  warmup = 300,
+  warmup = 400,
   chains = 1
 )
 
@@ -419,7 +433,7 @@ corr.plot = ggcorrplot(
   lab = TRUE,
   lab_size = 2.5,
   outline.col = "white",
-  colors = c('#6D9EC1', 'white', '#E46726'),
+  colors = c('#E46726', 'white', 'olivedrab3'),
   legend.title = 'Correlation',
   tl.cex = 8
 )
@@ -488,12 +502,12 @@ posterior.params.plot
 \caption{todo.}\label{fig_4}
 \end{figure}
 
-\subsection{Purchasing Power}
+\subsection{Purchasing power per country}
 todo
 
 <<echo=False>>=
 # PURCHASING POWER COMPARISON: data preparation, observed plots
-data.salary = GetNonNaData('salary_midpoint', 'big_mac_index')
+data.salary = GetNonNaDataCountry('salary_midpoint', 'big_mac_index')
 data.salary$country = droplevels(data.salary$country)
 data.salary$purchasing_power = data.salary$salary_midpoint / data.salary$big_mac_index
 
@@ -525,11 +539,11 @@ purchasing.power.observed.box.plot = ggplot(data.salary) +
   labs(x = 'country', y = 'purchasing power')
 
 ggsave(
-  paste('../plots/purchasing_power_observed_density.png'),
+  paste('../plots/purchasing_power_countries_observed_density.png'),
   purchasing.power.observed.density.plot
 )
 ggsave(
-  paste('../plots/purchasing_power_observed_box_plot.png'),
+  paste('../plots/purchasing_power_countries_observed_box_plot.png'),
   purchasing.power.observed.box.plot
 )
 @
@@ -586,16 +600,16 @@ params = c(
 stan.fit = stan(
   file = '../models/hierarchical_normal_inv_gamma.stan',
   data = stan.data,
-  iter = 5000,
-  warmup = 500,
+  iter = 1000,
+  warmup = 400,
   chains = 1
 )
 
 trace.plot = traceplot(stan.fit, pars = params)
-ggsave('../plots/purchasing_power_traceplot.png', trace.plot)
+ggsave('../plots/purchasing_power_countries_traceplot.png', trace.plot)
 
 summ = summary(stan.fit, pars = params)$summary
-write.table(summ, file = '../mcmc_summaries/purchasing_power_summary.txt')
+write.table(summ, file = '../mcmc_summaries/purchasing_power_countries_summary.txt')
 @
 
 <<echo=FALSE>>=
@@ -637,7 +651,7 @@ posterior.params.plot = ggplot(posterior.params) +
   ) +
   labs(x = 'todo', y = 'todo')
 
-ggsave('../plots/purchasing_power_posterior_parameters.png', posterior.params.plot)
+ggsave('../plots/purchasing_power_countries_posterior_parameters.png', posterior.params.plot)
 @
 
 \begin{figure}[H]
@@ -647,5 +661,317 @@ posterior.params.plot
 @
 \caption{todo.}\label{fig_6}
 \end{figure}
+
+\subsection{Job satisfaction per industry}
+todo
+
+<<echo=FALSE>>=
+# NUMBER OF RESPONDENTS PER INDUSTRY
+num.respondents.plot = ggplot(GetNonNaDataIndustry('industry')) +
+  geom_bar(aes(x = reorder(industry, industry, function(x) - length(x))), fill = '#ff5900') +
+  geom_text(stat = 'count', aes(x = industry, label = ..count..), vjust = -.05) +
+  labs(x = 'industry', y = 'number of respondents') +
+  theme(axis.text.x = element_text(
+    size  = 8,
+    angle = 45,
+    hjust = 1,
+    vjust = 1)
+  )
+
+ggsave(
+  paste('../plots/num_respondents_per_industry.png'),
+  num.respondents.plot
+)
+@
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=4,echo=FALSE>>=
+num.respondents.plot
+@
+\caption{Number of mathematics developers per industry.}\label{fig_7}
+\end{figure}
+
+<<echo=FALSE>>=
+# JOB SATISFACTION COMPARISON: data preparation
+params = c('theta[1]', 'theta[2]', 'theta[3]', 'theta[4]', 'theta[5]')
+params.labels = c(
+  'I hate my job',
+  'I\'m somewhat dissatisfied with my job',
+  'I\'m neither satisfied nor dissatisfied',
+  'I\'m somewhat satisfied with my job',
+  'I love my job'
+)
+params.satisfied = 5
+params.unsatisfied = c(1, 2, 3, 4)
+
+data.satisfaction = GetNonNaDataIndustry('job_satisfaction')
+data.satisfaction$industry = droplevels(data.satisfaction$industry)
+data.satisfaction = data.satisfaction[data.satisfaction$job_satisfaction != 'I don\'t have a job',]
+data.satisfaction$job_satisfaction = droplevels(data.satisfaction$job_satisfaction)
+
+# reorder factor levels
+reordered.levels = levels(data.satisfaction$job_satisfaction)[c(1, 4, 3, 5, 2)]
+data.satisfaction$job_satisfaction = factor(data.satisfaction$job_satisfaction, reordered.levels)
+@
+
+<<echo=FALSE>>=
+# JOB SATISFACTION COMPARISON: stan data preparation
+industries = unique(data.satisfaction$industry)
+stan.data = list()
+
+for (industry in industries) {
+  y = as.numeric(data.satisfaction[data.satisfaction$industry == industry, 'job_satisfaction'])
+  stan.data[[industry]] = list(
+    n = length(y),
+    k = length(params),
+    y = y,
+    a = c(1, 1, 1, 1, 1)
+  )
+}
+@
+
+<<computation,results=hide,echo=FALSE>>=
+# JOB SATISFACTION COMPARISON: model fitting and diagnostic plots saving
+stan.fits = list()
+
+for (industry in industries) {
+  # fit a model
+  stan.fits[[industry]] = stan(
+    file = '../models/multinomial_dirichlet.stan',
+    data = stan.data[[industry]],
+    iter = 1000,
+    warmup = 400,
+    chains = 1
+  )
+
+  trace.plot = traceplot(stan.fits[[industry]], pars = params)
+  file.name = sub('/', '', sub(' ', '_', tolower(industry)))
+  ggsave(
+    paste('../plots/job_satisfaction_comparison_traceplot_', file.name, '.png', sep = ''),
+    trace.plot
+  )
+
+  summ = summary(stan.fits[[industry]], pars = params)$summary
+  write.table(
+    summ,
+    paste('../mcmc_summaries/job_satisfaction_comparison_summary_', file.name, '.txt', sep = '')
+  )
+}
+@
+
+<<echo=FALSE>>=
+# JOB SATISFACTION COMPARISON: posterior predictive check (satisfied - not satisfied log odds ratio)
+empirical.logodds = data.frame()
+posterior.logodds = data.frame()
+
+for (industry in industries) {
+  observed.dataset = stan.data[[industry]]$y
+  n = stan.data[[industry]]$n
+  pred.datasets = extract(stan.fits[[industry]], pars = 'y_datasets')$y_datasets
+
+  # empirical log odds
+  num.satisfied = length(Filter(function(x) x == params.satisfied, observed.dataset))
+  num.unsatisfied = length(Filter(function(x) x %in% params.unsatisfied, observed.dataset))
+  df = data.frame(lo = log(num.satisfied / num.unsatisfied), n = n, industry = industry)
+  empirical.logodds = rbind(empirical.logodds, df)
+
+  # replicated log odds
+  num.satisfied = pred.datasets[, params.satisfied]
+  num.unsatisfied = rowSums(pred.datasets[, params.unsatisfied])
+  df = data.frame(lo = log(num.satisfied / num.unsatisfied), industry = industry)
+  posterior.logodds = rbind(posterior.logodds, df)
+}
+
+posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
+  geom_histogram(binwidth = .2, fill = 'dodgerblue') +
+  geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
+  facet_wrap(~industry) +
+  labs(x = 'posterior predictive log odds', y = 'count')
+
+ggsave(
+  paste('../plots/job_satisfaction_industries_comparison_posterior_check.png'),
+  posterior.check.plot
+)
+@
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=4,echo=FALSE>>=
+posterior.check.plot
+@
+\caption{todo.}\label{fig_8}
+\end{figure}
+
+<<echo=FALSE>>=
+# JOB SATISFACTION COMPARISON: posterior parameters
+posterior.params = data.frame()
+
+for (industry in industries) {
+  summ = summary(stan.fits[[industry]], pars = params[5], probs = c(0.05, 0.95))$summary
+  df = data.frame(
+    mean = summ[, c('mean')],
+    ci.low = summ[, c('5%')],
+    ci.up = summ[, c('95%')]
+  )
+  df$industry = industry
+  posterior.params = rbind(posterior.params, df)
+}
+
+posterior.params.plot = ggplot(posterior.params) +
+  geom_boxplot(
+    aes(
+      x = industry,
+      middle = mean,
+      lower = ci.low,
+      upper = ci.up,
+      ymin = mean,
+      ymax = mean,
+      fill = industry
+    ),
+    stat = 'identity'
+  ) +
+  theme(
+    legend.position = 'none',
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    )
+  ) +
+  labs(x = 'todo', y = 'todo')
+
+ggsave(
+  paste('../plots/job_satisfaction_industries_comparison_posterior_parameters.png'),
+  posterior.params.plot
+)
+@
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=4,echo=FALSE>>=
+posterior.params.plot
+@
+\caption{todo.}\label{fig_9}
+\end{figure}
+
+\subsection{Purchasing power per industry}
+todo
+
+<<echo=FALSE>>=
+# PURCHASING POWER COMPARISON: data preparation
+data.salary = GetNonNaDataIndustry('salary_midpoint', 'big_mac_index')
+data.salary$industry = droplevels(data.salary$industry)
+data.salary$purchasing_power = data.salary$salary_midpoint / data.salary$big_mac_index
+@
+
+<<echo=FALSE>>=
+# PURCHASING POWER COMPARISON: stan data preparation
+industries = unique(data.salary$industry)
+
+k = length(industries)
+n = c()
+ys = list()
+
+for (industry in industries) {
+  industry.purchasing_power = data.salary$purchasing_power[data.salary$industry == industry]
+  n = c(n, length(industry.purchasing_power))
+  ys[[industry]] = industry.purchasing_power
+}
+
+max_n = max(n)
+y = data.frame(matrix(NA, nrow = max_n, ncol = k))
+colnames(y) = industries
+
+for (industry in industries) {
+  length(ys[[industry]]) = max_n
+  y[, industry] = ys[[industry]]
+}
+
+# stan doesn't support NA
+y[is.na(y)] = 0
+
+stan.data = list(
+  k = k,
+  n = n,
+  max_n = max_n,
+  y = y
+)
+@
+
+<<computation,results=hide,echo=FALSE>>=
+# PURCHASING POWER COMPARISON: model fitting and diagnostic plots saving
+params = c(
+  'bg_mu', 'bg_s2', 'wg_s2',
+  paste('wg_mu[', 1:k, ']', sep = '')
+)
+
+stan.fit = stan(
+  file = '../models/hierarchical_normal_inv_gamma.stan',
+  data = stan.data,
+  iter = 1000,
+  warmup = 400,
+  chains = 1
+)
+
+trace.plot = traceplot(stan.fit, pars = params)
+ggsave('../plots/purchasing_power_industries_traceplot.png', trace.plot)
+
+summ = summary(stan.fit, pars = params)$summary
+write.table(summ, file = '../mcmc_summaries/purchasing_power_industries_summary.txt')
+@
+
+<<echo=FALSE>>=
+# PURCHASING POWER COMPARISON: posterior parameters
+params = params[4:length(params)]
+posterior.params = data.frame()
+
+for (i in seq_along(industries)) {
+  summ = summary(stan.fit, pars = params[i], probs = c(0.05, 0.95))$summary
+  df = data.frame(
+    mean = summ[, c('mean')],
+    ci.low = summ[, c('5%')],
+    ci.up = summ[, c('95%')]
+  )
+  df$industry = industries[i]
+  posterior.params = rbind(posterior.params, df)
+}
+
+posterior.params.plot = ggplot(posterior.params) +
+  geom_boxplot(
+    aes(
+      x = industry,
+      middle = mean,
+      lower = ci.low,
+      upper = ci.up,
+      ymin = mean,
+      ymax = mean,
+      fill = industry
+    ),
+    stat = 'identity'
+  ) +
+  theme(
+    legend.position = 'none',
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    )
+  ) +
+  labs(x = 'todo', y = 'todo')
+
+ggsave('../plots/purchasing_power_industries_posterior_parameters.png', posterior.params.plot)
+@
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=4,echo=FALSE>>=
+posterior.params.plot
+@
+\caption{todo.}\label{fig_10}
+\end{figure}
+
+\section{Conclusion}
+todo
 
 \end{document}
