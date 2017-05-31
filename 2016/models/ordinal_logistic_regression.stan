@@ -1,10 +1,11 @@
 # Ordinal Logistic Regression
 #
 # Parameters:
-#   todo
-#
-# Returns:
-#   todo
+#   n: sample size
+#   k: number of classes
+#   d: number of regressors
+#   y: vector of target variables of shape (n,)
+#   x: data matrix of shape (n, d)
 
 data {
   int<lower=0> n;
