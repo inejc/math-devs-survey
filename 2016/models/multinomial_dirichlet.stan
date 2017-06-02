@@ -7,7 +7,7 @@
 #   a: prior parameters of length k
 #
 # Generates:
-#   y_datasets: posterior predictive datasets of size n
+#   y_rep: posterior predictive datasets of size n
 
 data {
   int<lower=0> n;
@@ -36,6 +36,6 @@ model {
 }
 
 generated quantities {
-  int<lower=0> y_datasets[k];
-  y_datasets = multinomial_rng(theta, n);
+  int<lower=0> y_rep[k];
+  y_rep = multinomial_rng(theta, n);
 }

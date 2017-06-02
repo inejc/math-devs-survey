@@ -8,6 +8,10 @@
 #   y: data matrix of shape (max_n, k)
 #      with zero padding at the end for
 #      smaller sample sizes
+#
+# Generates:
+#   mu_rep: sample means of posterior predictive datasets
+#           of sizes n[i]
 
 data {
   int<lower=2> k;
@@ -36,5 +40,18 @@ model {
 
     for (sample_i in 1:n[group_i])
       y[sample_i, group_i] ~ normal(wg_mu[group_i], sqrt(wg_s2));
+  }
+}
+
+generated quantities {
+  vector[k] mu_rep;
+
+  for (group_i in 1:k) {
+    vector[n[group_i]] y_rep_group;
+
+    for (sample_i in 1:n[group_i])
+        y_rep_group[sample_i] = normal_rng(wg_mu[group_i], sqrt(wg_s2));
+
+    mu_rep[group_i] = mean(y_rep_group);
   }
 }

@@ -25,6 +25,7 @@
 library(ggplot2)
 library(rstan)
 library(ggcorrplot)
+library(reshape2)
 
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
@@ -155,7 +156,7 @@ data.satisfaction$job_satisfaction = factor(data.satisfaction$job_satisfaction, 
 
 <<echo=FALSE>>=
 # JOB SATISFACTION COMPARISON: stan data preparation
-countries = unique(data.satisfaction$country)
+countries = levels(data.satisfaction$country)
 stan.data = list()
 
 for (country in countries) {
@@ -178,7 +179,7 @@ for (country in countries) {
   stan.fits[[country]] = stan(
     file = '../models/multinomial_dirichlet.stan',
     data = stan.data[[country]],
-    iter = 1000,
+    iter = 5000,
     warmup = 400,
     chains = 1
   )
@@ -198,14 +199,14 @@ for (country in countries) {
 @
 
 <<echo=FALSE>>=
-# JOB SATISFACTION COMPARISON: posterior predictive check (satisfied - not satisfied log odds ratio)
+# JOB SATISFACTION COMPARISON: posterior predictive check
 empirical.logodds = data.frame()
 posterior.logodds = data.frame()
 
 for (country in countries) {
   observed.dataset = stan.data[[country]]$y
   n = stan.data[[country]]$n
-  pred.datasets = extract(stan.fits[[country]], pars = 'y_datasets')$y_datasets
+  pred.datasets = extract(stan.fits[[country]], pars = 'y_rep')$y_rep
 
   # empirical log odds
   num.satisfied = length(Filter(function(x) x == params.satisfied, observed.dataset))
@@ -221,10 +222,11 @@ for (country in countries) {
 }
 
 posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
-  geom_histogram(binwidth = .2, fill = 'dodgerblue') +
+  geom_density(fill = 'dodgerblue') +
   geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
   facet_wrap(~country) +
-  labs(x = 'posterior predictive log odds', y = 'count')
+  labs(x = 'posterior predictive log odds', y = 'count') +
+  theme(strip.text = element_text(size=7))
 
 ggsave(
   paste('../plots/job_satisfaction_countries_comparison_posterior_check.png'),
@@ -297,7 +299,6 @@ todo
 
 <<echo=FALSE>>=
 # JOB SATISFACTION EFFECTS: data preparation
-
 cols = c(
   'age_midpoint', 'gender', 'salary_midpoint', 'remote', 'job_satisfaction',
   'big_mac_index', 'unit_testing', 'commit_frequency', 'company_size_range',
@@ -412,7 +413,7 @@ params = c(
 stan.fit = stan(
   file = '../models/ordinal_logistic_regression.stan',
   data = stan.data,
-  iter = 1000,
+  iter = 5000,
   warmup = 400,
   chains = 1
 )
@@ -424,6 +425,38 @@ ggsave('../plots/job_satisfaction_effects_traceplot.png', trace.plot)
 summ = summary(stan.fit, pars = params)$summary
 write.table(summ, file = '../mcmc_summaries/job_satisfaction_effects_summary.txt')
 @
+
+<<echo=FALSE>>=
+# JOB SATISFACTION EFFECTS: posterior predictive check
+num.plots = 20
+pred.datasets = t(tail(as.data.frame(stan.fit, pars = 'y_rep'), n = num.plots))
+pred.datasets = melt(pred.datasets)[, 2:3]
+
+y_rep = data.frame(category = pred.datasets[, 2], replication = pred.datasets[, 1], dataset = 'replicated')
+y_obs = data.frame(category = rep(y, num.plots), replication = pred.datasets[, 1], dataset = 'observed')
+
+predictive.check = rbind(y_rep, y_obs)
+
+predictive.check.plot = ggplot(predictive.check) +
+  geom_bar(aes(x = category, fill = dataset), position = 'dodge') +
+  scale_fill_manual(values = c('dodgerblue', 'red')) +
+  facet_wrap(~replication, nrow = 5, ncol = 4) +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank(),
+    legend.position = 'bottom'
+  )
+
+ggsave('../plots/job_satisfaction_effects_posterior_check.png')
+@
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=5,echo=FALSE>>=
+predictive.check.plot
+@
+\caption{todo.}\label{fig_3}
+\end{figure}
 
 <<echo=FALSE>>=
 # JOB SATISFACTION EFFECTS: regressors correlation
@@ -445,13 +478,11 @@ ggsave('../plots/job_satisfaction_effects_regressors_correlation.png', corr.plot
 <<fig=True,width=5,height=4,echo=FALSE>>=
 corr.plot
 @
-\caption{todo.}\label{fig_3}
+\caption{todo.}\label{fig_4}
 \end{figure}
 
 <<echo=FALSE>>=
 # JOB SATISFACTION EFFECTS: posterior parameters
-# posterior.params = as.data.frame(stan.fit, pars = params[1:ncol(x)])
-# names(posterior.params) = names(x)
 params = params[1:ncol(x)]
 regressors = names(x)
 posterior.params = data.frame()
@@ -499,7 +530,7 @@ ggsave('../plots/job_satisfaction_effects_posterior_parameters.png', posterior.p
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.params.plot
 @
-\caption{todo.}\label{fig_4}
+\caption{todo.}\label{fig_5}
 \end{figure}
 
 \subsection{Purchasing power per country}
@@ -521,13 +552,14 @@ purchasing.power.observed.density.plot = ggplot(data.salary) +
       angle = 45,
       hjust = 1,
       vjust = 1
-    )
+    ),
+    strip.text = element_text(size=7)
   ) +
   labs(x = 'purchasing power', y = 'density')
 
 # observed data box plot
 purchasing.power.observed.box.plot = ggplot(data.salary) +
-  geom_boxplot(aes(x = country, y = purchasing_power, fill = country), notch = TRUE) +
+  geom_boxplot(aes(x = country, y = purchasing_power, fill = country)) +
   theme(
     legend.position = 'none',
     axis.text.x = element_text(
@@ -553,12 +585,12 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 purchasing.power.observed.density.plot
 @
-\caption{todo.}\label{fig_5}
+\caption{todo.}\label{fig_6}
 \end{figure}
 
 <<echo=FALSE>>=
 # PURCHASING POWER COMPARISON: stan data preparation
-countries = unique(data.salary$country)
+countries = levels(data.salary$country)
 
 k = length(countries)
 n = c()
@@ -600,7 +632,7 @@ params = c(
 stan.fit = stan(
   file = '../models/hierarchical_normal_inv_gamma.stan',
   data = stan.data,
-  iter = 1000,
+  iter = 5000,
   warmup = 400,
   chains = 1
 )
@@ -611,6 +643,48 @@ ggsave('../plots/purchasing_power_countries_traceplot.png', trace.plot)
 summ = summary(stan.fit, pars = params)$summary
 write.table(summ, file = '../mcmc_summaries/purchasing_power_countries_summary.txt')
 @
+
+<<echo=FALSE>>=
+# PURCHASING POWER COMPARISON: posterior predictive check
+mu.obs = data.frame()
+for (i in seq_along(countries)) {
+  y.obs = y[1:n[i], countries[i]]
+  mu.obs = rbind(mu.obs, data.frame(country = countries[i], mean = mean(y.obs)))
+}
+
+pred.datasets = as.data.frame(stan.fit, pars = 'mu_rep')
+names(pred.datasets) = countries
+
+mu.rep = melt(pred.datasets)
+names(mu.rep) = c('country', 'mean')
+
+posterior.check.plot = ggplot(mu.rep, aes(x = mean)) +
+  geom_density(fill = 'dodgerblue') +
+  geom_vline(data = mu.obs, aes(xintercept = mean), colour = 'red') +
+  facet_wrap(~country) +
+  labs(x = 'todo', y = 'todo') +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    strip.text = element_text(size=7)
+  )
+
+ggsave(
+  paste('../plots/purchasing_power_countries_posterior_check.png'),
+  posterior.check.plot
+)
+@
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=4,echo=FALSE>>=
+posterior.check.plot
+@
+\caption{todo.}\label{fig_7}
+\end{figure}
 
 <<echo=FALSE>>=
 # PURCHASING POWER COMPARISON: posterior parameters
@@ -659,7 +733,7 @@ ggsave('../plots/purchasing_power_countries_posterior_parameters.png', posterior
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.params.plot
 @
-\caption{todo.}\label{fig_6}
+\caption{todo.}\label{fig_8}
 \end{figure}
 
 \subsection{Job satisfaction per industry}
@@ -689,7 +763,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 num.respondents.plot
 @
-\caption{Number of mathematics developers per industry.}\label{fig_7}
+\caption{Number of mathematics developers per industry.}\label{fig_9}
 \end{figure}
 
 <<echo=FALSE>>=
@@ -717,7 +791,7 @@ data.satisfaction$job_satisfaction = factor(data.satisfaction$job_satisfaction, 
 
 <<echo=FALSE>>=
 # JOB SATISFACTION COMPARISON: stan data preparation
-industries = unique(data.satisfaction$industry)
+industries = levels(data.satisfaction$industry)
 stan.data = list()
 
 for (industry in industries) {
@@ -740,7 +814,7 @@ for (industry in industries) {
   stan.fits[[industry]] = stan(
     file = '../models/multinomial_dirichlet.stan',
     data = stan.data[[industry]],
-    iter = 1000,
+    iter = 5000,
     warmup = 400,
     chains = 1
   )
@@ -761,14 +835,14 @@ for (industry in industries) {
 @
 
 <<echo=FALSE>>=
-# JOB SATISFACTION COMPARISON: posterior predictive check (satisfied - not satisfied log odds ratio)
+# JOB SATISFACTION COMPARISON: posterior predictive check
 empirical.logodds = data.frame()
 posterior.logodds = data.frame()
 
 for (industry in industries) {
   observed.dataset = stan.data[[industry]]$y
   n = stan.data[[industry]]$n
-  pred.datasets = extract(stan.fits[[industry]], pars = 'y_datasets')$y_datasets
+  pred.datasets = extract(stan.fits[[industry]], pars = 'y_rep')$y_rep
 
   # empirical log odds
   num.satisfied = length(Filter(function(x) x == params.satisfied, observed.dataset))
@@ -784,10 +858,11 @@ for (industry in industries) {
 }
 
 posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
-  geom_histogram(binwidth = .2, fill = 'dodgerblue') +
+  geom_density(fill = 'dodgerblue') +
   geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
   facet_wrap(~industry) +
-  labs(x = 'posterior predictive log odds', y = 'count')
+  labs(x = 'posterior predictive log odds', y = 'count') +
+  theme(strip.text = element_text(size=7))
 
 ggsave(
   paste('../plots/job_satisfaction_industries_comparison_posterior_check.png'),
@@ -800,7 +875,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.check.plot
 @
-\caption{todo.}\label{fig_8}
+\caption{todo.}\label{fig_10}
 \end{figure}
 
 <<echo=FALSE>>=
@@ -852,22 +927,67 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.params.plot
 @
-\caption{todo.}\label{fig_9}
+\caption{todo.}\label{fig_11}
 \end{figure}
 
 \subsection{Purchasing power per industry}
 todo
 
 <<echo=FALSE>>=
-# PURCHASING POWER COMPARISON: data preparation
+# PURCHASING POWER COMPARISON: data preparation, observed plots
 data.salary = GetNonNaDataIndustry('salary_midpoint', 'big_mac_index')
 data.salary$industry = droplevels(data.salary$industry)
 data.salary$purchasing_power = data.salary$salary_midpoint / data.salary$big_mac_index
+
+# observed data density plot
+purchasing.power.observed.density.plot = ggplot(data.salary) +
+  geom_density(aes(x = purchasing_power, fill = industry)) +
+  facet_wrap(~industry) +
+  theme(
+    legend.position = 'none',
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    strip.text = element_text(size=7)
+  ) +
+  labs(x = 'purchasing power', y = 'density')
+
+# observed data box plot
+purchasing.power.observed.box.plot = ggplot(data.salary) +
+  geom_boxplot(aes(x = industry, y = purchasing_power, fill = industry)) +
+  theme(
+    legend.position = 'none',
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    )
+  ) +
+  labs(x = 'industry', y = 'purchasing power')
+
+ggsave(
+  paste('../plots/purchasing_power_industries_observed_density.png'),
+  purchasing.power.observed.density.plot
+)
+ggsave(
+  paste('../plots/purchasing_power_industries_observed_box_plot.png'),
+  purchasing.power.observed.box.plot
+)
 @
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=4,echo=FALSE>>=
+purchasing.power.observed.density.plot
+@
+\caption{todo.}\label{fig_12}
+\end{figure}
 
 <<echo=FALSE>>=
 # PURCHASING POWER COMPARISON: stan data preparation
-industries = unique(data.salary$industry)
+industries = levels(data.salary$industry)
 
 k = length(industries)
 n = c()
@@ -909,7 +1029,7 @@ params = c(
 stan.fit = stan(
   file = '../models/hierarchical_normal_inv_gamma.stan',
   data = stan.data,
-  iter = 1000,
+  iter = 5000,
   warmup = 400,
   chains = 1
 )
@@ -920,6 +1040,49 @@ ggsave('../plots/purchasing_power_industries_traceplot.png', trace.plot)
 summ = summary(stan.fit, pars = params)$summary
 write.table(summ, file = '../mcmc_summaries/purchasing_power_industries_summary.txt')
 @
+
+<<echo=FALSE>>=
+# PURCHASING POWER COMPARISON: posterior predictive check
+mu.obs = data.frame()
+for (i in seq_along(industries)) {
+  y.obs = data.salary$purchasing_power[data.salary$industry == industries[i]]
+  mu.obs = rbind(mu.obs, data.frame(industry = industries[i], mean = mean(y.obs)))
+}
+
+pred.datasets = as.data.frame(stan.fit, pars = 'mu_rep')
+names(pred.datasets) = industries
+
+mu.rep = melt(pred.datasets)
+names(mu.rep) = c('industry', 'mean')
+levels(mu.rep$industry) = levels(data.salary$industry)
+
+posterior.check.plot = ggplot(mu.rep, aes(x = mean)) +
+  geom_density(fill = 'dodgerblue') +
+  geom_vline(data = mu.obs, aes(xintercept = mean), colour = 'red') +
+  facet_wrap(~industry) +
+  labs(x = 'todo', y = 'todo') +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    strip.text = element_text(size=7)
+  )
+
+ggsave(
+  paste('../plots/purchasing_power_industries_posterior_check.png'),
+  posterior.check.plot
+)
+@
+
+\begin{figure}[H]
+\centering
+<<fig=True,width=5,height=4,echo=FALSE>>=
+posterior.check.plot
+@
+\caption{todo.}\label{fig_13}
+\end{figure}
 
 <<echo=FALSE>>=
 # PURCHASING POWER COMPARISON: posterior parameters
@@ -968,7 +1131,7 @@ ggsave('../plots/purchasing_power_industries_posterior_parameters.png', posterio
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.params.plot
 @
-\caption{todo.}\label{fig_10}
+\caption{todo.}\label{fig_14}
 \end{figure}
 
 \section{Conclusion}
