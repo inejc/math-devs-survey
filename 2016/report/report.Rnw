@@ -147,7 +147,6 @@ data.satisfaction$country = droplevels(data.satisfaction$country)
 data.satisfaction = data.satisfaction[data.satisfaction$job_satisfaction != 'I don\'t have a job',]
 data.satisfaction$job_satisfaction = droplevels(data.satisfaction$job_satisfaction)
 
-# reorder factor levels
 reordered.levels = levels(data.satisfaction$job_satisfaction)[c(1, 4, 3, 5, 2)]
 data.satisfaction$job_satisfaction = factor(data.satisfaction$job_satisfaction, reordered.levels)
 @
@@ -173,7 +172,6 @@ for (country in countries) {
 stan.fits = list()
 
 for (country in countries) {
-  # fit a model
   stan.fits[[country]] = stan(
     file = '../models/multinomial_dirichlet.stan',
     data = stan.data[[country]],
@@ -223,7 +221,7 @@ posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
   geom_density(fill = 'dodgerblue') +
   geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
   facet_wrap(~country) +
-  labs(x = 'posterior predictive log odds', y = 'count') +
+  labs(x = 'log odds', y = 'density') +
   theme(strip.text = element_text(size=7))
 
 ggsave(
@@ -237,7 +235,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.check.plot
 @
-\caption{todo.}\label{fig_1}
+\caption{Job satisfaction between countries posterior predictive check. Densities are sampling distributions of log odds of the answer 'I love my job' calculated from posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed log odds.}\label{fig_1}
 \end{figure}
 
 <<echo=FALSE>>=
@@ -276,7 +274,7 @@ posterior.params.plot = ggplot(posterior.params) +
       vjust = 1
     )
   ) +
-  labs(x = 'todo', y = 'todo')
+  labs(x = 'country', y = 'probability of \'I love my job\'')
 
 ggsave(
   paste('../plots/job_satisfaction_countries_comparison_posterior_parameters.png'),
@@ -289,10 +287,10 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.params.plot
 @
-\caption{todo.}\label{fig_2}
+\caption{90\% confidence intervals for posterior probabilities of the answer 'I love my job' for all countries.}\label{fig_2}
 \end{figure}
 
-\subsection{Effects on job satisfaction}
+\subsection{Job satisfaction explanatory variables}
 todo
 
 <<echo=FALSE>>=
@@ -416,7 +414,6 @@ stan.fit = stan(
   chains = 1
 )
 
-# save a traceplot
 trace.plot = traceplot(stan.fit, pars = params)
 ggsave('../plots/job_satisfaction_effects_traceplot.png', trace.plot)
 
@@ -430,20 +427,21 @@ num.plots = 20
 pred.datasets = t(tail(as.data.frame(stan.fit, pars = 'y_rep'), n = num.plots))
 pred.datasets = melt(pred.datasets)[, 2:3]
 
-y_rep = data.frame(category = pred.datasets[, 2], replication = pred.datasets[, 1], dataset = 'replicated')
-y_obs = data.frame(category = rep(y, num.plots), replication = pred.datasets[, 1], dataset = 'observed')
+y_rep = data.frame(category = pred.datasets[, 2], replication = pred.datasets[, 1], sample = 'replicated')
+y_obs = data.frame(category = rep(y, num.plots), replication = pred.datasets[, 1], sample = 'observed')
 
 predictive.check = rbind(y_rep, y_obs)
 
 predictive.check.plot = ggplot(predictive.check) +
-  geom_bar(aes(x = category, fill = dataset), position = 'dodge') +
+  geom_bar(aes(x = category, fill = sample), position = 'dodge') +
   scale_fill_manual(values = c('dodgerblue', 'red')) +
   facet_wrap(~replication, nrow = 5, ncol = 4) +
   theme(
     strip.background = element_blank(),
     strip.text.x = element_blank(),
     legend.position = 'bottom'
-  )
+  ) +
+  labs(x = 'job satisfaction category', y = 'count')
 
 ggsave('../plots/job_satisfaction_effects_posterior_check.png')
 @
@@ -453,12 +451,21 @@ ggsave('../plots/job_satisfaction_effects_posterior_check.png')
 <<fig=True,width=5,height=5,echo=FALSE>>=
 predictive.check.plot
 @
-\caption{todo.}\label{fig_3}
+\caption{Posterior predictive check for conditional distribution of job satisfaction given explanatory variables. Plotted are histograms of 20 replicated samples along with a histogram of the observed sample.}\label{fig_3}
 \end{figure}
 
 <<echo=FALSE>>=
 # JOB SATISFACTION EFFECTS: regressors correlation
+names(x)[names(x) == 'age_midpoint'] <- 'age'
+names(x)[names(x) == 'remote'] <- 'works_remote'
+names(x)[names(x) == 'unit_testing'] <- 'values_unit_testing'
+names(x)[names(x) == 'gender_male'] <- 'is_male'
+names(x)[names(x) == 'commit_once_a_day'] <- 'commits_once_a_day'
+names(x)[names(x) == 'big_company'] <- 'works_in_big_company'
+names(x)[names(x) == 'phd'] <- 'has_phd'
+
 corr = round(cor(cbind(x, y)), 2)
+
 corr.plot = ggcorrplot(
   corr,
   lab = TRUE,
@@ -468,6 +475,7 @@ corr.plot = ggcorrplot(
   legend.title = 'Correlation',
   tl.cex = 8
 )
+
 ggsave('../plots/job_satisfaction_effects_regressors_correlation.png', corr.plot)
 @
 
@@ -476,7 +484,7 @@ ggsave('../plots/job_satisfaction_effects_regressors_correlation.png', corr.plot
 <<fig=True,width=5,height=4,echo=FALSE>>=
 corr.plot
 @
-\caption{todo.}\label{fig_4}
+\caption{Pearson correlation coefficients of selected explanatory variables and the dependent variable y (i.e. job satisfaction).}\label{fig_4}
 \end{figure}
 
 <<echo=FALSE>>=
@@ -518,7 +526,7 @@ posterior.params.plot = ggplot(posterior.params) +
       vjust = 1
     )
   ) +
-  labs(x = 'todo', y = 'todo')
+  labs(x = 'explanatory variable', y = 'effect')
 
 ggsave('../plots/job_satisfaction_effects_posterior_parameters.png', posterior.params.plot)
 @
@@ -528,7 +536,7 @@ ggsave('../plots/job_satisfaction_effects_posterior_parameters.png', posterior.p
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.params.plot
 @
-\caption{todo.}\label{fig_5}
+\caption{90\% confidence intervals for posterior regression coefficients of selected explanatory variables for job satisfaction.}\label{fig_5}
 \end{figure}
 
 \subsection{Purchasing power per country}
@@ -540,7 +548,6 @@ data.salary = GetNonNaDataCountry('salary_midpoint', 'big_mac_index')
 data.salary$country = droplevels(data.salary$country)
 data.salary$purchasing_power = data.salary$salary_midpoint / data.salary$big_mac_index
 
-# observed data density plot
 purchasing.power.observed.density.plot = ggplot(data.salary) +
   geom_density(aes(x = purchasing_power, fill = country)) +
   facet_wrap(~country) +
@@ -555,7 +562,6 @@ purchasing.power.observed.density.plot = ggplot(data.salary) +
   ) +
   labs(x = 'purchasing power', y = 'density')
 
-# observed data box plot
 purchasing.power.observed.box.plot = ggplot(data.salary) +
   geom_boxplot(aes(x = country, y = purchasing_power, fill = country)) +
   theme(
@@ -583,7 +589,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 purchasing.power.observed.density.plot
 @
-\caption{todo.}\label{fig_6}
+\caption{Observed densities of purchasing power for all countries.}\label{fig_6}
 \end{figure}
 
 <<echo=FALSE>>=
@@ -660,7 +666,7 @@ posterior.check.plot = ggplot(mu.rep, aes(x = mean)) +
   geom_density(fill = 'dodgerblue') +
   geom_vline(data = mu.obs, aes(xintercept = mean), colour = 'red') +
   facet_wrap(~country) +
-  labs(x = 'todo', y = 'todo') +
+  labs(x = 'mean', y = 'density') +
   theme(
     axis.text.x = element_text(
       angle = 45,
@@ -681,7 +687,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.check.plot
 @
-\caption{todo.}\label{fig_7}
+\caption{Purchasing power between countries posterior predictive check. Densities are sampling distributions of means from posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed mean.}\label{fig_7}
 \end{figure}
 
 <<echo=FALSE>>=
@@ -721,7 +727,7 @@ posterior.params.plot = ggplot(posterior.params) +
       vjust = 1
     )
   ) +
-  labs(x = 'todo', y = 'todo')
+  labs(x = 'country', y = 'purchasing power')
 
 ggsave('../plots/purchasing_power_countries_posterior_parameters.png', posterior.params.plot)
 @
@@ -731,7 +737,7 @@ ggsave('../plots/purchasing_power_countries_posterior_parameters.png', posterior
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.params.plot
 @
-\caption{todo.}\label{fig_8}
+\caption{90\% confidence intervals for purchasing power posterior means for all countries.}\label{fig_8}
 \end{figure}
 
 \subsection{Job satisfaction per industry}
@@ -782,7 +788,6 @@ data.satisfaction$industry = droplevels(data.satisfaction$industry)
 data.satisfaction = data.satisfaction[data.satisfaction$job_satisfaction != 'I don\'t have a job',]
 data.satisfaction$job_satisfaction = droplevels(data.satisfaction$job_satisfaction)
 
-# reorder factor levels
 reordered.levels = levels(data.satisfaction$job_satisfaction)[c(1, 4, 3, 5, 2)]
 data.satisfaction$job_satisfaction = factor(data.satisfaction$job_satisfaction, reordered.levels)
 @
@@ -808,7 +813,6 @@ for (industry in industries) {
 stan.fits = list()
 
 for (industry in industries) {
-  # fit a model
   stan.fits[[industry]] = stan(
     file = '../models/multinomial_dirichlet.stan',
     data = stan.data[[industry]],
@@ -859,7 +863,7 @@ posterior.check.plot = ggplot(posterior.logodds, aes(x = lo)) +
   geom_density(fill = 'dodgerblue') +
   geom_vline(data = empirical.logodds, aes(xintercept = lo), colour = 'red') +
   facet_wrap(~industry) +
-  labs(x = 'posterior predictive log odds', y = 'count') +
+  labs(x = 'log odds', y = 'density') +
   theme(strip.text = element_text(size=7))
 
 ggsave(
@@ -873,7 +877,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.check.plot
 @
-\caption{todo.}\label{fig_10}
+\caption{Job satisfaction between industries posterior predictive check. Densities are sampling distributions of log odds of the answer 'I love my job' calculated from posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed log odds.}\label{fig_10}
 \end{figure}
 
 <<echo=FALSE>>=
@@ -912,7 +916,7 @@ posterior.params.plot = ggplot(posterior.params) +
       vjust = 1
     )
   ) +
-  labs(x = 'todo', y = 'todo')
+  labs(x = 'industry', y = 'probability of \'I love my job\'')
 
 ggsave(
   paste('../plots/job_satisfaction_industries_comparison_posterior_parameters.png'),
@@ -925,7 +929,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.params.plot
 @
-\caption{todo.}\label{fig_11}
+\caption{90\% confidence intervals for posterior probabilities of the answer 'I love my job' for all industries.}\label{fig_11}
 \end{figure}
 
 \subsection{Purchasing power per industry}
@@ -937,7 +941,6 @@ data.salary = GetNonNaDataIndustry('salary_midpoint', 'big_mac_index')
 data.salary$industry = droplevels(data.salary$industry)
 data.salary$purchasing_power = data.salary$salary_midpoint / data.salary$big_mac_index
 
-# observed data density plot
 purchasing.power.observed.density.plot = ggplot(data.salary) +
   geom_density(aes(x = purchasing_power, fill = industry)) +
   facet_wrap(~industry) +
@@ -952,7 +955,6 @@ purchasing.power.observed.density.plot = ggplot(data.salary) +
   ) +
   labs(x = 'purchasing power', y = 'density')
 
-# observed data box plot
 purchasing.power.observed.box.plot = ggplot(data.salary) +
   geom_boxplot(aes(x = industry, y = purchasing_power, fill = industry)) +
   theme(
@@ -980,7 +982,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 purchasing.power.observed.density.plot
 @
-\caption{todo.}\label{fig_12}
+\caption{Observed densities of purchasing power for all industries.}\label{fig_12}
 \end{figure}
 
 <<echo=FALSE>>=
@@ -1058,7 +1060,7 @@ posterior.check.plot = ggplot(mu.rep, aes(x = mean)) +
   geom_density(fill = 'dodgerblue') +
   geom_vline(data = mu.obs, aes(xintercept = mean), colour = 'red') +
   facet_wrap(~industry) +
-  labs(x = 'todo', y = 'todo') +
+  labs(x = 'mean', y = 'density') +
   theme(
     axis.text.x = element_text(
       angle = 45,
@@ -1079,7 +1081,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.check.plot
 @
-\caption{todo.}\label{fig_13}
+\caption{Purchasing power between industries posterior predictive check. Densities are sampling distributions of means from posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed mean.}\label{fig_13}
 \end{figure}
 
 <<echo=FALSE>>=
@@ -1119,7 +1121,7 @@ posterior.params.plot = ggplot(posterior.params) +
       vjust = 1
     )
   ) +
-  labs(x = 'todo', y = 'todo')
+  labs(x = 'country', y = 'purchasing power')
 
 ggsave('../plots/purchasing_power_industries_posterior_parameters.png', posterior.params.plot)
 @
@@ -1129,7 +1131,7 @@ ggsave('../plots/purchasing_power_industries_posterior_parameters.png', posterio
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.params.plot
 @
-\caption{todo.}\label{fig_14}
+\caption{90\% confidence intervals for purchasing power posterior means for all industries.}\label{fig_14}
 \end{figure}
 
 \section{Conclusion}
