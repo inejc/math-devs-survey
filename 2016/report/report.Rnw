@@ -83,22 +83,22 @@ DummyEncode = function(df, col.name) {
 \maketitle
 
 \section{Introduction}
-Anonymised responses from Stack Overflow Annual Developer Survey are published each year along the results to encourage their further analysis. Being curious about where in the world and in which domain a data scientist should start his / her career, we attempt to answer some of the relevant questions by analysing the available dataset.
+Anonymised responses from Stack Overflow Annual Developer Survey are published each year along the results to encourage their further analysis. Being curious about where in the world and in which domain a data scientist should start his / her career, we attempt to answer some of the relevant questions by analysing available data.
 
 \vspace{2mm}
 
-An important thing to note when interpreting the results however is that this data may not be a represantative sample from the population of mathematics developers. One should keep in mind that these are developers who were aware of the survey and were willing to answer the questions.
+An important thing to note when interpreting the results however is that this dataset may not be a represantative sample from the population of mathematics developers. One should keep in mind that these are developers who were aware of the survey and were willing to answer the questions.
 
 \section{Data preparation}
 The dataset was constructed from survey that took place from January 7 to January 25, 2016, with responses originating from Stack Overflow, Stack Exchange technical sites, Facebook and Twitter. Most of the questions are demographic or relating to professional work and technology. Raw data consists of 56030 samples and 66 features, all of which are optional.
 
-In order to obtain an adequately sizable sample, we have decided to include all respondents that belong to the occupation group of mathematics developers, which includes data scientists, machine learning developers and developers with statistics and mathematics backgrounds. After filtering out other occupations and responses with unknown countries there are 2132 samples left for the analysis.
+In order to obtain an adequately sizable sample, we have decided to include all respondents that belong to the occupation group of mathematics developers, which includes data scientists, machine learning developers and developers with statistics and mathematics backgrounds. After filtering out other occupations and responses with unknown countries there are 2132 samples left for analysis.
 
 \section{Exploratory analysis}
-We are primarily interested in answering two questions: where in the world and in which domains (industries) are mathematics developers satisfied with their jobs the most. Additionally, we want to learn how job satisfaction depends on other factors like compensation, age, gender, etc. We will attempt to answer the first two questions by comparing the level of satisfaction across groups and the last one by estimating linear relationships between variables.
+We are primarily interested in answering two questions: where in the world and in which domains (industries) mathematics developers love their jobs the most. Additionally, we want to learn how job satisfaction depends on other factors like compensation, age, gender, etc. We will attempt to answer the first two questions by comparing the level of satisfaction across groups and the last one by estimating linear relationships between variables.
 
 \subsection{Job satisfaction among countries}
-Number of mathematics developers per countries can be seen in Figure \ref{fig_0}. Minimum number of 35 respondents is required to take the country into account and all others are placed into a single group called \textit{Other}. Note that selected countries and number of answers may be different when doing inference of specific features due to missing values (i.e. optional answers in the survey). Majority of respondents are from United States, followed by a combination of countries with less than 40 developers, United Kingdom, Germany and India.
+Number of mathematics developers per countries can be seen in Figure \ref{fig_0}. Minimum number of 35 respondents is required to take the country into account and all others are placed into a single group called \textit{Other}. Note that selected countries and number of answers may be different when doing inference of specific features due to missing values (i.e. optional answers in the survey). Majority of respondents are from United States, followed by a combination of countries with less than 35 developers, United Kingdom, Germany and India.
 
 <<echo=FALSE>>=
 # NUMBER OF RESPONDENTS PER COUNTRY
@@ -127,13 +127,13 @@ num.respondents.plot
 \caption{Number of mathematics developers per country.}\label{fig_0}
 \end{figure}
 
-The question from the survey regarding job satisfaction is: 'How satisfied are you with your current job(s)?' with six possible answers: 'I don't have a job', 'I hate my job', 'I'm somewhat dissatisfied with my job', 'I'm neither satisfied nor dissatisfied', 'I'm somewhat satisfied with my job' and 'I love my job'. This is a typical approach to scaling answers in survey research and we will treat the response as a categorical variable for group comparison. Additionally, we will discard answers of people without the job, resulting in five categories.
+The question from the survey regarding job satisfaction is: 'How satisfied are you with your current job(s)?' with six possible answers: 'I don't have a job', 'I hate my job', 'I'm somewhat dissatisfied with my job', 'I'm neither satisfied nor dissatisfied', 'I'm somewhat satisfied with my job' and 'I love my job'. This is a typical approach to scaling answers in survey research and for group comparison we will treat the response as a categorical variable. Additionally, we will discard answers of people without the job, resulting in five categories.
 
-A multinomial-dirichlet model can be used to model categorical data and since we are mainly interested in a single category ('I love my job') an alternative would be to transform it to a binary variable and use a binomial-beta model instead. Nevertheless, we will model all five categories simultaneously and focus on a single category when interpreting the results. Note that both dirichlet and beta priors are conjugate for the two sampling models and posteriors could easily be derived analytically, we will still use MCMC approximations as an alternative.
+A multinomial-dirichlet model can be used to model categorical data and since we are mainly interested in a single category ('I love my job') an alternative would be to transform it to a binary variable and use a binomial-beta model instead. Nevertheless, we will model all five categories simultaneously and focus on a single category when interpreting the results. We will use MCMC approximations even though dirichlet and beta priors are conjugate for the two sampling models and posteriors could easily be derived analytically.
 
 A posterior parameters sample is obtained for each country independently by running a MCMC algorithm for 5000 iterations with 400 warmup samples. We have no opinions or information from related studies regarding parameters, thus uninformative priors are used. Traceplots and MCMC summaries are not included in the report, but can be found in the \textit{plots} and in the \textit{mcmc\_summaries} directories. Nothing abnormal can be spotted and it seems that all the chains have converged.
 
-In Figure \ref{fig_1} a posterior predictive check can be seen. Sampling distributions of log odds of the answer 'I love my job' calculated from posterior predictive samples of the same sizes as the observed samples are plotted for each of the countries and there are no noticeable discrepancies between the replicated the observed data (with respect to the selected statistic). Note that visual posterior predictive checks are 'sanity checks' more than anything else (e.g. their usage as a model selection technique would be quite inadequate).
+In Figure \ref{fig_1} a posterior predictive check can be seen. Sampling distributions of log odds of the answer 'I love my job' calculated from posterior predictive samples of the same sizes as the observed samples are plotted for each of the countries and there are no noticeable discrepancies between the replicated and the observed data (with respect to the selected statistic). Note that visual posterior predictive checks are 'sanity checks' more than anything else (e.g. their usage as a model selection technique would be inadequate).
 
 <<echo=FALSE>>=
 # JOB SATISFACTION COMPARISON: data preparation
@@ -241,7 +241,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.check.plot
 @
-\caption{Job satisfaction between countries posterior predictive check. Densities are sampling distributions of log odds of the answer 'I love my job' calculated from posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed log odds.}\label{fig_1}
+\caption{Job satisfaction among countries posterior predictive check. Densities are sampling distributions of log odds of the answer 'I love my job' calculated from posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed log odds.}\label{fig_1}
 \end{figure}
 
 Result of the sampling can be seen in Figure \ref{fig_2}. Plotted are 90\% confidence intervals for posterior probabilities of the answer 'I love my job' for all countries. It can be concluded that there are either no meaningful differences among the countries regarding the probability of someone loving his / her job or we simply can't answer the question with this data. We can however take a more indirect approach by estimating which variables are positively correlated with job satisfaction and compare those among groups instead.
@@ -299,7 +299,7 @@ posterior.params.plot
 \end{figure}
 
 \subsection{Explanatory variables for job satisfaction}
-Here we are concerned with how job satisfaction varies with a set of selected variables. Specifically, we are interested in how person's age, gender, purchasing power, whether he or she works remotely, values unit testing, commits code at least once a day and whether he or she works in a big company and has PhD explain the level of their job satisfaction. Age and purchasing power are continuous and all other variables are binary. It should be stated that purchasing power is calculated as compensation in dollars divided by a Big Mac index of the respondent's country (an informal way of measuring the purchasing power parity, i.e. how many Big Macs can a person buy per year) and company is regarded big if number of employees is more than 99. All other variables should be self explanatory.
+Here we are concerned with how job satisfaction varies with a set of selected variables. Specifically, we are interested in how person's age, gender, purchasing power, whether he or she works remotely, values unit testing, commits code at least once a day and whether he or she works in a big company and has PhD explain the level of their job satisfaction. Age and purchasing power are continuous and all other variables are binary. It should be stated that purchasing power is calculated as compensation in dollars divided by a Big Mac index of the respondent's country (an informal way of measuring the purchasing power parity, i.e. how many Big Macs a person can buy per year) and company is regarded big if number of employees is more than 99. All other variables should be self explanatory.
 
 We will treat the outcome (5 possible answers as before) as an ordinal variable (i.e. a categorical for which values are ordered, but the distances between them are unknown) to preserve information regarding the order. Ordinal logistic regression with uninformative priors is our model of choice here. Again 5000 posterior samples are drawn using a MCMC algorithm with 400 warmup iterations. Traceplots and MCMC summaries are not included in the report, but can be found in the \textit{plots} and in the \textit{mcmc\_summaries} directories. Nothing abnormal can be spotted and it seems that all the chains have converged.
 
@@ -466,7 +466,7 @@ predictive.check.plot
 \caption{Posterior predictive check for conditional distribution of job satisfaction given explanatory variables. Plotted are histograms of 20 replicated samples along with a histogram of the observed sample.}\label{fig_3}
 \end{figure}
 
-The observed Pearson correlation coefficients (covariance of the two variables divided by the product of their standard deviations) of selected explanatory variables are plotted in Figure \ref{fig_4}. There are no strong correlations between regressors with exception of correlation between age and purchasing power ($+0.36$), which we have to keep in mind when interpreting the regression coefficients. Otherwise these results seem somewhat reasonable: remote work is positively correlated with age and negatively with working in a big company and age is positively correlated with purchasing power.
+The observed Pearson correlation coefficients (covariance of the two variables divided by the product of their standard deviations) of selected explanatory variables are plotted in Figure \ref{fig_4}. There are no strong correlations between regressors with exception of correlation between age and purchasing power ($+0.36$), which we have to keep in mind when interpreting the regression coefficients. Otherwise results from observed sample seem somewhat reasonable: remote work is positively correlated with age and negatively with working in a big company and age is positively correlated with purchasing power.
 
 <<echo=FALSE>>=
 # JOB SATISFACTION EFFECTS: regressors correlation
@@ -610,9 +610,9 @@ purchasing.power.observed.density.plot
 \caption{Observed densities of purchasing power for all countries.}\label{fig_6}
 \end{figure}
 
-A posterior sample of group means is obtained for each country independently by running a MCMC algorithm for 5000 iterations with 400 warmup samples. Like before we have no opinions or information from related studies regarding parameters, thus uninformative priors are used. Traceplots and MCMC summaries are not included in the report, but can be found in the \textit{plots} and in the \textit{mcmc\_summaries} directories. Nothing abnormal can be spotted and it seems that all the chains have converged.
+A posterior sample of group means is obtained for each country by running a MCMC algorithm for 5000 iterations with 400 warmup samples. Like before we have no opinions or information from related studies regarding parameters, thus uninformative priors are used. Traceplots and MCMC summaries are not included in the report, but can be found in the \textit{plots} and in the \textit{mcmc\_summaries} directories. Nothing abnormal can be spotted and it seems that all the chains have converged.
 
-Posterior predictive check can be seen in Figure \ref{fig_7}. Sampling distributions of means of posterior predictive samples of the same sizes as the observed samples are plotted along with the observed means. We can observe a practical demonstration of the central limit theorem (larger sample size - smaller standard error). There are no noticeable discrepancies between the replicated the observed data with respect to the selected statistic (the mean).
+Posterior predictive check can be seen in Figure \ref{fig_7}. Sampling distributions of means of posterior predictive samples of the same sizes as the observed samples are plotted along with the observed means. We can observe a practical demonstration of the central limit theorem (larger sample size - smaller uncertainty). There are no noticeable discrepancies between the replicated and the observed data with respect to the selected statistic (the mean).
 
 <<echo=FALSE>>=
 # PURCHASING POWER COMPARISON: stan data preparation
@@ -709,7 +709,7 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.check.plot
 @
-\caption{Purchasing power between countries posterior predictive check. Densities are sampling distributions of means of posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed means.}\label{fig_7}
+\caption{Purchasing power among countries posterior predictive check. Densities are sampling distributions of means of posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed means.}\label{fig_7}
 \end{figure}
 
 Result of the sampling can be seen in Figure \ref{fig_8}. Plotted are 90\% confidence intervals for purchasing power posterior means for all countries. We won't calculate exact probabilities of comparisons of means (although we could, we have the posterior distributions), but rather compare them visually. Mean purchasing power is higher in United States and Australia than in all other countries (more than 20000 Big Macs per year). United Kingdom has higher mean purchasing power than all other countries (excluding United States and Australia) and seems similar to Switzerland's, although level of uncertainty is much higher for the latter due to a smaller sample size. Canada, Germany and all countries with less than 35 respondents combined have higher mean purchasing power than Italy.
@@ -905,10 +905,10 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.check.plot
 @
-\caption{Job satisfaction between industries posterior predictive check. Densities are sampling distributions of log odds of the answer 'I love my job' calculated from posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed log odds.}\label{fig_10}
+\caption{Job satisfaction among industries posterior predictive check. Densities are sampling distributions of log odds of the answer 'I love my job' calculated from posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed log odds.}\label{fig_10}
 \end{figure}
 
-Result of the sampling can be seen in Figure \ref{fig_11}. Plotted are 90\% confidence intervals for posterior probabilities of the answer 'I love my job' for all industries. The only speculations we can make with this data is that for the Software Products and Education domains the probability of the answer 'I love my job' seems higher than for the Finance / Banking domain (although we will stay conservative and not make any conclusions).
+Result of the sampling can be seen in Figure \ref{fig_11}. Plotted are 90\% confidence intervals for posterior probabilities of the answer 'I love my job' for all industries. The only speculations we can make with this data is that for the Software Products and Education domains the probability of the answer 'I love my job' seems higher than for the Finance / Banking domain (although we will stay conservative and not make any claims).
 
 <<echo=FALSE>>=
 # JOB SATISFACTION COMPARISON: posterior parameters
@@ -963,7 +963,6 @@ posterior.params.plot
 \end{figure}
 
 \subsection{Purchasing power among industries}
-In Figure \ref{fig_12} the observed densities of purchasing power for all industries can be seen. The gamma or Weibull distributions could again be used as our first attempts at modeling if we wouldn't only be interested in the mean.
 
 <<echo=FALSE>>=
 # PURCHASING POWER COMPARISON: data preparation, observed plots
@@ -1007,15 +1006,7 @@ ggsave(
 )
 @
 
-\begin{figure}[H]
-\centering
-<<fig=True,width=5,height=4,echo=FALSE>>=
-purchasing.power.observed.density.plot
-@
-\caption{Observed densities of purchasing power for all industries.}\label{fig_12}
-\end{figure}
-
-Posterior predictive check can be seen in Figure \ref{fig_13}. Sampling distributions of means of posterior predictive samples of the same sizes as the observed samples are plotted along with the observed means. There are no noticeable discrepancies between the replicated the observed data with respect to the selected statistic (the mean).
+Posterior predictive check for the hierarchical normal model can be seen in Figure \ref{fig_12}. Sampling distributions of means of posterior predictive samples of the same sizes as the observed samples are plotted along with the observed means. There are no noticeable discrepancies between the replicated the observed data with respect to the selected statistic (the mean).
 
 <<echo=FALSE>>=
 # PURCHASING POWER COMPARISON: stan data preparation
@@ -1113,10 +1104,10 @@ ggsave(
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.check.plot
 @
-\caption{Purchasing power between industries posterior predictive check. Densities are sampling distributions of means of posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed means.}\label{fig_13}
+\caption{Purchasing power among industries posterior predictive check. Densities are sampling distributions of means of posterior predictive samples of the same sizes as the observed samples. Red lines indicate the observed means.}\label{fig_12}
 \end{figure}
 
-Result of the sampling can be seen in Figure \ref{fig_14}. Plotted are 90\% confidence intervals for purchasing power posterior means for all industries. We are most certain that the mean purchasing power is higher in Finance / Banking than in all other domains (except in the Internet domain and the Media / Advertising domain). Mathematics developers in Education have lower mean purchasing power than those in the Software Products, Media / Advertising, Internet, Healthcare and Finance / Banking domains.
+Result of the sampling can be seen in Figure \ref{fig_13}. Plotted are 90\% confidence intervals for purchasing power posterior means for all industries. We are most certain that the mean purchasing power is higher in Finance / Banking than in all other domains (except in the Internet domain and the Media / Advertising domain). Mathematics developers in Education have lower mean purchasing power than those in the Software Products, Media / Advertising, Internet, Healthcare and Finance / Banking domains. There are no meaningful differences in remaining domains.
 
 <<echo=FALSE>>=
 # PURCHASING POWER COMPARISON: posterior parameters
@@ -1165,12 +1156,14 @@ ggsave('../plots/purchasing_power_industries_posterior_parameters.png', posterio
 <<fig=True,width=5,height=4,echo=FALSE>>=
 posterior.params.plot
 @
-\caption{90\% confidence intervals for purchasing power posterior means for all industries.}\label{fig_14}
+\caption{90\% confidence intervals for purchasing power posterior means for all industries.}\label{fig_13}
 \end{figure}
 
 \section{Conclusion}
 In this project we compared probabilities that a mathematics developer loves his / her job and mean purchasing powers among countries and industries. Additionally, we were interested in how job satisfaction varies with a set of selected variables.
 
-We suspect that age and working in a big company is negatively correlated with job satisfaction, we suspect that working remotely is positively correlated with job satisfaction and we are quite certain that purchasing power is positively correlated with job satisfaction. Our degree of belief is quite high that mean purchasing power is the highest in Australia and United States. We also believe, that mean purchasing power is the highest in the Finance / Banking industry.
+We suspect that age and working in a big company are negatively correlated with job satisfaction, we suspect that working remotely is positively correlated with job satisfaction and we are quite certain that purchasing power is positively correlated with job satisfaction. Our degree of belief is quite high that mean purchasing power is the highest in Australia and United States. We also believe, that mean purchasing power is the highest in the Finance / Banking industry and that it is also much higher than in education.
+
+As stated at the beginning, one has to keep in mind that this dataset may not be a represantative sample from the population of mathematics developers. An obvisous drawback is also the amount of data we have for each country and as a consequence a lot of countries were not taken into account when comparing job satisfaction and purchasing power among groups.
 
 \end{document}

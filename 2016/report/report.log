@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.3.3)  2 JUN 2017 23:50
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.3.3)  4 JUN 2017 12:57
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -366,44 +366,39 @@ File: report-038.pdf Graphic file (type pdf)
  <use report-038.pdf>
 Package pdftex.def Info: report-038.pdf used on input line 183.
 (pdftex.def)             Requested size: 361.35136pt x 289.0837pt.
- [12 <./report-036.pdf>] <report-040.pdf, id=115, 361.35pt x 289.08pt>
-File: report-040.pdf Graphic file (type pdf)
- <use report-040.pdf>
-Package pdftex.def Info: report-040.pdf used on input line 193.
+ [12 <./report-036.pdf>] <report-043.pdf, id=115, 361.35pt x 289.08pt>
+File: report-043.pdf Graphic file (type pdf)
+ <use report-043.pdf>
+Package pdftex.def Info: report-043.pdf used on input line 197.
 (pdftex.def)             Requested size: 361.35136pt x 289.0837pt.
 
-[13 <./report-038.pdf>] <report-044.pdf, id=125, 361.35pt x 289.08pt>
-File: report-044.pdf Graphic file (type pdf)
+[13 <./report-038.pdf>] <report-045.pdf, id=125, 361.35pt x 289.08pt>
+File: report-045.pdf Graphic file (type pdf)
 
-<use report-044.pdf>
-Package pdftex.def Info: report-044.pdf used on input line 204.
+<use report-045.pdf>
+Package pdftex.def Info: report-045.pdf used on input line 206.
 (pdftex.def)             Requested size: 361.35136pt x 289.0837pt.
- [14 <./report-040.pdf>]
-<report-046.pdf, id=134, 361.35pt x 289.08pt>
-File: report-046.pdf Graphic file (type pdf)
- <use report-046.pdf>
-Package pdftex.def Info: report-046.pdf used on input line 213.
-(pdftex.def)             Requested size: 361.35136pt x 289.0837pt.
- [15 <./report-044.pdf>] [16 <./report-046.pdf>] (./report.aux) ) 
+ [14 <./report-043.pdf>] [15 <./report-045.pdf>]
+(./report.aux) ) 
 Here is how much of TeX's memory you used:
- 2961 strings out of 493033
- 42323 string characters out of 6134140
- 96077 words of memory out of 5000000
- 6420 multiletter control sequences out of 15000+600000
+ 2955 strings out of 493033
+ 42219 string characters out of 6134140
+ 96067 words of memory out of 5000000
+ 6415 multiletter control sequences out of 15000+600000
  25079 words of font info for 53 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  37i,11n,43p,1421b,271s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/te
-xlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/tex
-live/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texl
-ive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texliv
-e/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/
-2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/20
-15/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on report.pdf (16 pages, 447102 bytes).
+</usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmbx12.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/
+cm/cmmi10.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmr10.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmr12.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+r17.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmti
+10.pfb>
+Output written on report.pdf (15 pages, 394281 bytes).
 PDF statistics:
- 173 PDF objects out of 1000 (max. 8388607)
- 115 compressed objects within 2 object streams
+ 164 PDF objects out of 1000 (max. 8388607)
+ 109 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
- 80 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 75 words of extra memory for PDF output out of 10000 (max. 10000000)
 
